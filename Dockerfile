@@ -11,8 +11,10 @@ COPY china.list /etc/apt/sources.list
 RUN apt-get update 
 RUN apt install -y wget \
                    curl \
-                   gnupg
+                   gnupg \
+                   python3-pip
 
+RUN pip3 install transforms3d
 
 # Install Gazebo & ROS2 packages
 RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg && \
@@ -29,7 +31,8 @@ RUN apt install -y gazebo \
                    ros-humble-ros2-controllers \
                    ros-humble-ros2-control \
                    ros-humble-moveit \
-                   ros-humble-gripper-controllers
+                   ros-humble-gripper-controllers \
+                   ros-humble-rqt-tf-tree
 
 
 # Copy the ROS project into the container

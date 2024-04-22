@@ -8,7 +8,7 @@ services:
     privileged: true
     environment:
       - DISPLAY=:0
-      - GAZEBO_MODEL_PATH=/root/ros2_ws/src/the_construct_office_gazebo/models:/root/ros2_ws/src/the_construct_office_gazebo/barista_ros2/barista_description:$${GAZEBO_MODEL_PATH}
+      - GAZEBO_MODEL_PATH=/root/ros2_ws/src/the_construct_office_gazebo/models:/root/ros2_ws/src/ur_arm:$${GAZEBO_MODEL_PATH}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev/shm:/dev/shm  
@@ -16,7 +16,7 @@ services:
     ports:
       - "11345:11345"
       - "11311:11311"
-    command: "bash -c 'source /root/ros2_ws/install/setup.bash && ros2 launch the_construct_office_gazebo starbots_ur3e.launch.xml'" 
+    #command: "bash -c 'source /root/ros2_ws/install/setup.bash && ros2 launch the_construct_office_gazebo starbots_ur3e.launch.xml'" 
 
 # For ROS2 dont use network_mode: host. ROS2 uses Fast-DDS that would make some conflict when subscribing to the topics in other
 # containers or from the host machine, thus use /dev/shm:/dev/shm  to share the memory
