@@ -93,3 +93,5 @@ source /root/ros2_ws/install/setup.bash && \
 ros2 launch my_moveit_config move_group.launch.py && \
 ros2 launch my_moveit_config moveit_rviz.launch.py
 ```
+
+gazebo-ros-pkgs descargado de la branch ros2 arregla el problema de la pointcloud no ordenada en la depth camara

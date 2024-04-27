@@ -22,7 +22,6 @@ RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pk
 RUN apt-get update 
 RUN apt install -y gazebo \
                    ros-humble-controller-manager \
-                   ros-humble-gazebo-ros-pkgs \
                    ros-humble-joint-state-publisher \
                    ros-humble-joint-trajectory-controller \
                    ros-humble-joint-state-broadcaster \
@@ -32,7 +31,9 @@ RUN apt install -y gazebo \
                    ros-humble-ros2-control \
                    ros-humble-moveit \
                    ros-humble-gripper-controllers \
+                   ros-humble-grasping-msgs \
                    ros-humble-rqt-tf-tree
+                   # ros-humble-gazebo-ros-pkgs \ it is an outdated version depth camera doesnt generate ordered pointclouds (pc)
 
 
 # Copy the ROS project into the container
