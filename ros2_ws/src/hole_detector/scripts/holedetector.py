@@ -17,6 +17,7 @@ import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import CameraInfo
 from geometry_msgs.msg import Point
 from hole_detector.srv import HoleCoordinates 
@@ -24,6 +25,8 @@ from hole_detector.srv import HoleCoordinates
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+
+import ros2_numpy as rnp
 
 # transformation.py was not included in tf2
 # https://answers.ros.org/question/368446/how-do-i-use-tf2_ros-to-convert-from-quaternions-to-euler/
@@ -36,16 +39,16 @@ from transforms3d.quaternions import quat2mat
 class HoleDetector(Node):
 
     def __init__(self):
-        super().__init__('hole_detector')
+        super().__init__('hole_detector_node')
 
         # Service callback
         self.srv_ = self.create_service(HoleCoordinates, 'holes_coordinates', self.holes_coordinates_callback)
 
-        # Camera topic subscriber
-        self.image_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_callback, 10)
+        # Camera pointcloud topic subscriber
+        self.pc_subscriber_ = self.create_subscription(PointCloud2, '/wrist_rgbd_depth_sensor/points', self.point_callback, 10)
 
-        # Camera info topic
-        self.image_info_subscriber_ = self.create_subscription(CameraInfo, '/wrist_rgbd_depth_sensor/camera_info', self.camera_info_callback, 10)
+        # Camera image subscriber
+        self.image_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_callback, 10)
 
         # Image publisher just for visualization
         self.image_publisher_ = self.create_publisher(Image, '/detected_holes_image', 10)
@@ -60,9 +63,8 @@ class HoleDetector(Node):
         self.target_frame_ = "base_link"
 
         # Parameter Initialization
-        self.intrinsic_inv_ = np.array([], dtype=np.float32)
-        self.translation_ = np.array([], dtype=np.float32)
-        self.rotation_matrix_inv_ = np.array([], dtype=np.float32)
+        self.homogeneous_matrix_ = np.array([], dtype=np.float32)
+        self.xyz_ = []
         self.holes_coordinates_ = []
 
         # Load extrinsic matrix 
@@ -80,14 +82,30 @@ class HoleDetector(Node):
             for pt in self.holes_coordinates_:
                 # Fill the message
                 point = Point()
-                point.x = pt[0]
-                point.y = pt[1]
-                point.z = pt[2]
+                point.x = float(pt[0])
+                point.y = float(pt[1])
+                point.z = float(pt[2])
+                #point.x = -0.254
+                #point.y = 0.223
+                #point.z = -0.001
                 response.coordinates.append(point)
         else:
             response.success = False
 
         return response
+
+
+    def point_callback(self, msg):
+        """
+            Extract the x,y,z coordinates as seen as
+            the camera
+        """
+
+        # Reshape data into a 2D array
+        cloud_array = rnp.point_cloud2.pointcloud2_to_array(msg)
+        # print(cloud_array.dtype.names) # ('x', 'y', 'z', 'rgb')
+        # Extract x, y, z coordinates
+        self.xyz_ = rnp.point_cloud2.get_xyz_points(cloud_array, remove_nans=False)
 
 
     def image_callback(self, msg):
@@ -96,13 +114,9 @@ class HoleDetector(Node):
             of the cup holder robot, also draw the circles
             in a new image for visualition purposes
         """
-        # Check if the intrisic parameter were already loaded
-        if not np.any(self.intrinsic_inv_):
-            self.get_logger().warning("Camera intrisic parameters not loaded yet")
-            return
 
         # Check if the extrinsic parameter were already loaded
-        if not np.any(self.rotation_matrix_inv_):
+        if not np.any(self.homogeneous_matrix_):
             self.get_logger().warning("Camera extrinsic parameters not loaded yet")
             return
 
@@ -150,12 +164,13 @@ class HoleDetector(Node):
                     fontScale = 0.3
                     color = (0, 255, 0)
                     thickness = 1
-                    x_string = "x:" + str(coor[0])[:3]
-                    y_string = "y:" + str(coor[1])[:3]
-                    z_string = "z:" + str(coor[2])[:3]
+                    x_string = "x:" + str(float(coor[0])*10)[:3]
+                    y_string = "y:" + str(float(coor[1])*10)[:3]
+                    z_string = "z:" + str(float(coor[2])*10)[:3]
                     cv2.putText(self.cv_image_, x_string, (a + 25, b - 11), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, y_string, (a + 25, b), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, z_string, (a + 25, b + 11), font, fontScale, color, thickness, cv2.LINE_AA)
+                    
 
             else:
                self.holes_coordinates_ = []
@@ -164,17 +179,6 @@ class HoleDetector(Node):
         ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="passthrough")
         self.image_publisher_.publish(ros_image)
 
-
-    def camera_info_callback(self, msg):
-        """
-            Get intrinsic parameter from the camera
-        """
-        camera_parameter = np.array(msg.k, dtype=np.float32)
-        camera_parameter = camera_parameter.reshape((3, 3))
-        self.intrinsic_inv_ = np.linalg.inv(camera_parameter)
-        self.destroy_subscription(self.image_info_subscriber_) # After getting the parameters no need to call again
-        self.get_logger().info("Intrisic parameters captured")
-        
 
     def tf_calculation(self):
         """
@@ -202,7 +206,7 @@ class HoleDetector(Node):
             return False
 
         # Extract translation and rotation from the transform
-        self.translation_ = np.array([transform.transform.translation.x,
+        translation = np.array([transform.transform.translation.x,
                                       transform.transform.translation.y,
                                       transform.transform.translation.z])
 
@@ -212,23 +216,25 @@ class HoleDetector(Node):
                              transform.transform.rotation.w])
 
         # Extrinsic matrix from lidar reference to camera reference
-        self.rotation_matrix_inv_ = np.linalg.inv(quat2mat(rotation))
+        extrinsic_matrix = np.append(quat2mat(rotation), translation)
+        self.homogeneous_matrix_ = np.reshape(np.r_[extrinsic_matrix, [0, 0, 0, 1]], (4,4))
         self.get_logger().info("Extrinsic parameters captured")
         return True
 
 
     def get_world_coord(self, image_coor):
         """
-            Transform the image coordinates
+            Transform the camera coordinates
             into the world coordinates
-            https://www.fdxlabs.com/calculate-x-y-z-real-world-coordinates-from-a-single-camera-using-opencv/
         """
-        # Transform the image coordinates into camera coordinates
-        camera_coordinates = np.dot(self.intrinsic_inv_, np.append(image_coor, 1))
+        dim = np.shape(self.xyz_)
+        
+        if image_coor[0] >= dim[1] or image_coor[1] >= dim[1]:
+            return []
+        xyz = np.array(np.append(self.xyz_[image_coor[0]][image_coor[1]], 1))
         # Transform the camera coordinates into world coordinates
-        world_coordinates = camera_coordinates - self.translation_
-        world_coordinates = np.dot(self.rotation_matrix_inv_, world_coordinates)
-        return world_coordinates
+        world_coordinates = self.homogeneous_matrix_@np.reshape(xyz, (4,1))
+        return world_coordinates[:3]
         
 
 def main(args=None):
