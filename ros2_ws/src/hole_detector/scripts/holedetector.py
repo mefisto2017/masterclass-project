@@ -85,9 +85,6 @@ class HoleDetector(Node):
                 point.x = float(pt[0])
                 point.y = float(pt[1])
                 point.z = float(pt[2])
-                #point.x = -0.254
-                #point.y = 0.223
-                #point.z = -0.001
                 response.coordinates.append(point)
         else:
             response.success = False
@@ -157,8 +154,10 @@ class HoleDetector(Node):
 
                     # Save the coordinates
                     coor = self.get_world_coord([a, b])
-                    self.holes_coordinates_.append(coor)
+                    if coor is None:
+                        continue
 
+                    self.holes_coordinates_.append(coor)
                     # Write the coordinates on the image
                     font = cv2.FONT_HERSHEY_SIMPLEX 
                     fontScale = 0.3
@@ -206,18 +205,23 @@ class HoleDetector(Node):
             return False
 
         # Extract translation and rotation from the transform
-        translation = np.array([transform.transform.translation.x,
-                                      transform.transform.translation.y,
-                                      transform.transform.translation.z])
+        translation = np.array([[transform.transform.translation.x],
+                                [transform.transform.translation.y],
+                                [transform.transform.translation.z]])
 
-        rotation = np.array([transform.transform.rotation.x,
-                             transform.transform.rotation.y,
-                             transform.transform.rotation.z,
-                             transform.transform.rotation.w])
+        # quat2mat uses W first!!!
+        quat = np.array([transform.transform.rotation.w,
+                         transform.transform.rotation.x,
+                         transform.transform.rotation.y,
+                         transform.transform.rotation.z])
+
+        rotation = quat2mat(quat)
+        rotation = np.reshape(rotation, (3,3))
 
         # Extrinsic matrix from lidar reference to camera reference
-        extrinsic_matrix = np.append(quat2mat(rotation), translation)
-        self.homogeneous_matrix_ = np.reshape(np.r_[extrinsic_matrix, [0, 0, 0, 1]], (4,4))
+        extrinsic_matrix = np.append(rotation, translation, axis=1)
+        self.homogeneous_matrix_ = np.r_[extrinsic_matrix, [[0, 0, 0, 1]]]
+        self.homogeneous_matrix_ = np.reshape(self.homogeneous_matrix_, (4,4))
         self.get_logger().info("Extrinsic parameters captured")
         return True
 
@@ -229,11 +233,12 @@ class HoleDetector(Node):
         """
         dim = np.shape(self.xyz_)
         
-        if image_coor[0] >= dim[1] or image_coor[1] >= dim[1]:
+        if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
         xyz = np.array(np.append(self.xyz_[image_coor[0]][image_coor[1]], 1))
+        xyz = np.reshape(xyz, (4,1))
         # Transform the camera coordinates into world coordinates
-        world_coordinates = self.homogeneous_matrix_@np.reshape(xyz, (4,1))
+        world_coordinates = self.homogeneous_matrix_@xyz
         return world_coordinates[:3]
         
 
