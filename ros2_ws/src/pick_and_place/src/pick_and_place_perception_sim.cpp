@@ -112,6 +112,18 @@ private:
     move_group_arm.setStartStateToCurrentState();
     move_group_gripper.setStartStateToCurrentState();
 
+    // Set Reference frame and end effector
+    // https://docs.ros.org/en/groovy/api/moveit_ros_planning_interface/html/group__set__pose__goal.html
+    move_group_arm.setPoseReferenceFrame("base_link");
+    std::string rf_string = move_group_arm.getPoseReferenceFrame();
+    char* char_arr_rf = &rf_string[0];
+    RCLCPP_INFO(LOGGER,"Reference frame set to: %s", char_arr_rf);
+
+    move_group_arm.setEndEffectorLink("tool0");
+    std::string ee_string = move_group_arm.getEndEffectorLink();
+    char* char_arr_ee = &ee_string[0];
+    RCLCPP_INFO(LOGGER,"End effector link set to: %s", char_arr_ee);
+    
     // Go Home
     RCLCPP_INFO(LOGGER, "Going Home");
     move_group_arm.setNamedTarget("home");
@@ -119,13 +131,13 @@ private:
 
     RCLCPP_INFO(LOGGER, "Rotating Arm");
     geometry_msgs::msg::Pose target_pose1;
-    target_pose1.orientation.x = 0.875;
-    target_pose1.orientation.y = 0.483;
-    target_pose1.orientation.z = 0.027;
-    target_pose1.orientation.w = -0.013;
-    target_pose1.position.x = -0.312;
-    target_pose1.position.y = 0.457;
-    target_pose1.position.z = -0.010;
+    target_pose1.orientation.x = -0.5;
+    target_pose1.orientation.y = 0.5;
+    target_pose1.orientation.z = 0.5;
+    target_pose1.orientation.w = 0.5;
+    target_pose1.position.x = x_pos;
+    target_pose1.position.y = y_pos;
+    target_pose1.position.z = z_pos;
     move_group_arm.setPoseTarget(target_pose1);
     move_group_arm.move();
     RCLCPP_INFO(LOGGER, "Finish Arm");
