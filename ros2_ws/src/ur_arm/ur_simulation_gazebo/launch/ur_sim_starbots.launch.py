@@ -293,11 +293,6 @@ def generate_launch_description():
         DeclareLaunchArgument("launch_rviz", default_value="false", description="Launch RViz?")
     )
 
-    onrobot_models_pkg_path = "/root/ros2_ws/src"
 
-    if 'GAZEBO_MODEL_PATH' in os.environ:
-        os.environ['GAZEBO_MODEL_PATH'] =  os.environ['GAZEBO_MODEL_PATH'] + ':' + onrobot_models_pkg_path
-    else:
-        os.environ['GAZEBO_MODEL_PATH'] =  onrobot_models_pkg_path
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
