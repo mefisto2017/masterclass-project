@@ -170,7 +170,6 @@ class HoleDetector(Node):
                     cv2.putText(self.cv_image_, y_string, (a + 25, b), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, z_string, (a + 25, b + 11), font, fontScale, color, thickness, cv2.LINE_AA)
                     
-
             else:
                self.holes_coordinates_ = []
             
@@ -218,7 +217,7 @@ class HoleDetector(Node):
         rotation = quat2mat(quat)
         rotation = np.reshape(rotation, (3,3))
 
-        # Extrinsic matrix from lidar reference to camera reference
+        # Extrinsic matrix from camera reference to base_link reference
         extrinsic_matrix = np.append(rotation, translation, axis=1)
         self.homogeneous_matrix_ = np.r_[extrinsic_matrix, [[0, 0, 0, 1]]]
         self.homogeneous_matrix_ = np.reshape(self.homogeneous_matrix_, (4,4))
