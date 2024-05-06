@@ -97,3 +97,8 @@ ros2 launch my_moveit_config moveit_rviz.launch.py
 gazebo-ros-pkgs descargado de la branch ros2 arregla el problema de la pointcloud no ordenada en la depth camara
 https://roboticsbackend.com/ros2-package-for-both-python-and-cpp-nodes/
 https://ros2-tutorial.readthedocs.io/en/latest/using_python_library.html
+
+Real camera
+ros2 param set /D415/D415 align_depth.enable True
+ros2 param set /D415/D415 enable_sync True
+ros2 param set /D415/D415 pointcloud.ordered_pc True
