@@ -191,6 +191,24 @@ private:
     move_group_arm.setNamedTarget("preplace");
     move_group_arm.move(); 
 
+    // Define orientation constraint
+    // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
+    moveit_msgs::msg::OrientationConstraint orientation_constraint;
+    orientation_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
+    orientation_constraint.link_name = move_group_arm.getEndEffectorLink();
+    // Create pose orientation constrant as the current orientation
+    auto current_pose = move_group_interface.getCurrentPose();
+    orientation_constraint.orientation = current_pose.pose.orientation;
+    orientation_constraint.absolute_x_axis_tolerance = 0.4;
+    orientation_constraint.absolute_y_axis_tolerance = 0.4;
+    orientation_constraint.absolute_z_axis_tolerance = 0.4;
+    orientation_constraint.weight = 1.0;
+    // We need to use a generic Constraints message, but this time we add it to the orientation_constraints
+    moveit_msgs::msg::Constraints orientation_constraints;
+    orientation_constraints.orientation_constraints.emplace_back(orientation_constraint);
+    // Set constraints
+    move_group_arm.setPathConstraints(orientation_constraints);
+
     // Place
     RCLCPP_INFO(LOGGER, "Placing");
     target_pose1.orientation.x = 0.917;
