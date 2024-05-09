@@ -37,7 +37,9 @@ RUN apt install -y gazebo \
                    ros-humble-gripper-controllers \
                    ros-humble-grasping-msgs \
                    ros-humble-rqt-tf-tree \
-                   ros-humble-tf-transformations
+                   ros-humble-tf-transformations \
+                   ros-humble-moveit-planners-chomp \
+                   ros-humble-moveit-chomp-optimizer-adapter
                    # ros-humble-gazebo-ros-pkgs \ it is an outdated version depth camera doesnt generate ordered pointclouds (pc)
 
 
