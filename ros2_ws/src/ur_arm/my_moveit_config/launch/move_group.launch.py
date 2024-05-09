@@ -5,7 +5,15 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    moveit_config = MoveItConfigsBuilder("name", package_name="my_moveit_config").to_moveit_configs()
+    # moveit_config = MoveItConfigsBuilder("name", package_name="my_moveit_config").to_moveit_configs()
+
+    moveit_config = (
+        MoveItConfigsBuilder("name", package_name="my_moveit_config")
+        .planning_pipelines(
+            pipelines=["ompl", "chomp"]
+        )
+        .to_moveit_configs()
+    )
     
     # Move Group Node
     move_group_node = Node(
@@ -18,6 +26,12 @@ def generate_launch_description():
             {"publish_robot_description_semantic": True},
             {"use_sim_time": True},
         ],
+    )
+
+    scene_planner_node = Node(
+        package="moveit_ros_planning",
+        executable="moveit_publish_scene_from_text",
+        output="screen",
     )
 
     return LaunchDescription(

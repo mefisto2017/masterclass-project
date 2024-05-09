@@ -128,21 +128,8 @@ private:
     RCLCPP_INFO(LOGGER, "Going Home");
     move_group_arm.setNamedTarget("home");
     move_group_arm.move();
-
-    RCLCPP_INFO(LOGGER, "Rotating Arm");
-    geometry_msgs::msg::Pose target_pose1;
-    target_pose1.orientation.x = -0.5;
-    target_pose1.orientation.y = 0.5;
-    target_pose1.orientation.z = 0.5;
-    target_pose1.orientation.w = 0.5;
-    target_pose1.position.x = x_pos;
-    target_pose1.position.y = y_pos;
-    target_pose1.position.z = z_pos;
-    move_group_arm.setPoseTarget(target_pose1);
-    move_group_arm.move();
-    RCLCPP_INFO(LOGGER, "Finish Arm");
-
-    /*// Pregrasp
+    
+    // Pregrasp
     RCLCPP_INFO(LOGGER, "Pregrasp Position");
     move_group_arm.setNamedTarget("pregrasp");
     move_group_arm.move();
@@ -156,23 +143,23 @@ private:
     RCLCPP_INFO(LOGGER, "Approach to object!");
     geometry_msgs::msg::Pose target_pose1;
     std::vector<geometry_msgs::msg::Pose> approach_waypoints;
-    target_pose1.position.x = x_pos;
-    target_pose1.position.y = y_pos;
-    target_pose1.position.z = 0.254;
-    target_pose1.orientation.x = 0.721;
-    target_pose1.orientation.y = -0.693;
-    target_pose1.orientation.z = -0.018;
-    target_pose1.orientation.w = -0.006;
+    target_pose1.position.x = 0.199;
+    target_pose1.position.y = 0.365;
+    target_pose1.position.z = 0.397;
+    target_pose1.orientation.x = 0.917;
+    target_pose1.orientation.y = -0.399;
+    target_pose1.orientation.z = 0.007;
+    target_pose1.orientation.w = -0.016;
 
-    target_pose1.position.z -= 0.04;
+    target_pose1.position.z -= 0.4;
     approach_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z -= 0.04;
+    target_pose1.position.z -= 0.4;
     approach_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_approach;
     const double jump_threshold = 0.0;
-    const double eef_step = 0.01;
+    const double eef_step = 0.1;
 
     double fraction = move_group_arm.computeCartesianPath(approach_waypoints, eef_step, jump_threshold, trajectory_approach);
 
@@ -181,7 +168,7 @@ private:
     // Close Gripper
     RCLCPP_INFO(LOGGER, "Close Gripper!");
     move_group_gripper.setNamedTarget("gripper_close");
-    move_group_gripper.move();
+    move_group_gripper.move();/*
 
     // Retreat
     RCLCPP_INFO(LOGGER, "Retreat from object!");
@@ -197,24 +184,34 @@ private:
     fraction = move_group_arm.computeCartesianPath(
         retreat_waypoints, eef_step, jump_threshold, trajectory_retreat);
 
-    move_group_arm.execute(trajectory_retreat);
+    move_group_arm.execute(trajectory_retreat);*/
+
+    // Preplace
+    RCLCPP_INFO(LOGGER, "Rotating Arm");
+    move_group_arm.setNamedTarget("preplace");
+    move_group_arm.move(); 
 
     // Place
-    RCLCPP_INFO(LOGGER, "Rotating Arm");
-    geometry_msgs::msg::Pose target_pose1;
-    target_pose1.orientation.x = -1.0;
-    target_pose1.orientation.y = 0.00;
-    target_pose1.orientation.z = 0.00;
-    target_pose1.orientation.w = 0.00;
-    target_pose1.position.x = 0.343;
-    target_pose1.position.y = 0.132;
-    target_pose1.position.z = 0.264;
+    RCLCPP_INFO(LOGGER, "Placing");
+    target_pose1.orientation.x = 0.917;
+    target_pose1.orientation.y = -0.399;
+    target_pose1.orientation.z = 0.007;
+    target_pose1.orientation.w = -0.016;
+    target_pose1.position.x = x_pos;
+    target_pose1.position.y = y_pos;
+    target_pose1.position.z = z_pos + 0.4;
     move_group_arm.setPoseTarget(target_pose1);
-
+    move_group_arm.move();
+    
     // Open Gripper
     RCLCPP_INFO(LOGGER, "Release Object!");
     move_group_gripper.setNamedTarget("gripper_open");
-    move_group_gripper.move();*/
+    move_group_gripper.move();
+
+    // Go Home
+    RCLCPP_INFO(LOGGER, "Going Home");
+    move_group_arm.setNamedTarget("home");
+    move_group_arm.move();
   }
 }; // class GetPoseClient
 
