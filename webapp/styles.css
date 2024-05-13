@@ -1,0 +1,213 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #000000;
+    color: #fff;
+    text-align: center;
+    padding: 10px;    
+}
+
+main {
+    display: flex;
+    justify-content: flex-start;
+    padding: 20px;
+}
+
+.connection-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.connection-container h3,
+.connection-container p {
+    margin-right: 10px;
+}
+
+.text-danger {
+        margin-top: 10px; 
+}
+
+.text-success {
+        margin-top: 10px; 
+}
+
+.left-panel {
+    width: 30%;
+    display: flex;
+    position: relative;
+}
+
+.map-3dviewer-container {
+    position: relative;
+    flex: 1;
+    margin-left: 20px;
+}
+
+.rviz-container {
+    position: relative;
+}
+
+.viewer-container {
+    position: absolute;
+}
+
+#map{
+    position: absolute;
+    border: 1px solid #ddd;
+    height: 400px;
+    width: 400px;
+}
+
+#div3DViewer{
+    position: absolute; /* Use absolute positioning */
+    top: 250px;         
+    left: 250px;        
+    display: inline-block;
+    border: 1px solid rgb(0, 0, 0);
+}
+
+
+
+
+.center-panel {
+    width: 30%;
+    display: flex;
+    position: relative;
+}
+
+.image-waypoints-container {
+    position: relative;
+    flex: 1;
+}
+
+.image-container {
+    position: relative;
+}
+
+.waypoints-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+#w1 {
+    position: absolute; /* Use absolute positioning */
+    top: 320px;         
+    left: 50px;  
+}
+
+#w2 {
+    position: absolute; /* Use absolute positioning */
+    top: 320px;         
+    left: 320px;  
+}
+
+#w3 {
+    position: absolute; /* Use absolute positioning */
+    top: 220px;         
+    left: 320px;  
+}
+
+#w4 {
+    position: absolute; /* Use absolute positioning */
+    top: 220px;         
+    left: 185px;  
+}
+
+#w5 {
+    position: absolute; /* Use absolute positioning */
+    top: 150px;         
+    left: 185px;  
+}
+
+#w6 {
+    position: absolute; /* Use absolute positioning */
+    top: 150px;         
+    left: 50px;  
+}
+
+#w7 {
+    position: absolute; /* Use absolute positioning */
+    top: 80px;         
+    left: 50px;  
+}
+
+#w8 {
+    position: absolute; /* Use absolute positioning */
+    top: 150px;         
+    left: 320px;  
+}
+
+#w9 {
+    position: absolute; /* Use absolute positioning */
+    top: 80px;         
+    left: 320px;  
+}
+
+
+
+
+
+.right-panel {
+    width: 30%;
+    display: flex;
+    position: relative;
+}
+
+.camera-joystick-container {
+    position: relative;
+    flex: 1;
+    margin-left: 20px;
+}
+
+.camera-container {
+    position: relative;
+}
+
+.joystick-container {
+    position: absolute;
+}
+
+#robotCamera {
+    margin-bottom: 10px;
+    position: absolute;
+    border: 1px solid #ddd;
+    height: 400px;
+    width: 640px;
+}
+
+#dragstartzone {
+    position: absolute; /* Use absolute positioning */
+    top: 300px;         
+    left: 550px;        
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #333;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 30%);
+    z-index: 10;
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+}
+
+#dragCircle {
+    position: absolute;
+    z-index: 9;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 30%);
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+}
+
+#dragCircle:hover {
+    background-color: lightcoral;
+}
