@@ -18,8 +18,9 @@ def generate_launch_description():
     # Find paths
     scene_file_path = PathJoinSubstitution([moveit_package, "scenes", "coffee_shop.scene"])
     srdf_file_path = PathJoinSubstitution([moveit_package, "config", "name.srdf"])
+    controller_file_path = PathJoinSubstitution([moveit_package, "config", "moveit_controllers.yaml"])
     urdf_file_path = PathJoinSubstitution([ur_package, "urdf", "ur.urdf.xacro"]) 
-    
+
     moveit_config = MoveItConfigsBuilder("name", package_name="my_moveit_config").to_moveit_configs()
 
     ppp_node = Node(

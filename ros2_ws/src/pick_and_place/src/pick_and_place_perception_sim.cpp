@@ -64,14 +64,14 @@ private:
     if (!response->success) RCLCPP_ERROR(LOGGER, "Failed to get hole coordinates. Exiting.");
 
     RCLCPP_INFO(LOGGER, "Result received");
-    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[0].x,
-                                               response->coordinates[0].y,
-                                               response->coordinates[0].z);
+    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[1].x,
+                                               response->coordinates[1].y,
+                                               response->coordinates[1].z);
 
 
-    float x_pos = response->coordinates[0].x;
-    float y_pos = response->coordinates[0].y;
-    float z_pos = response->coordinates[0].z;
+    float x_pos = response->coordinates[1].x;
+    float y_pos = response->coordinates[1].y;
+    float z_pos = response->coordinates[1].z;
 
     /* Coordinates returned by the camera
        X: 0.327950 , Y: -0.012054
@@ -151,10 +151,10 @@ private:
     target_pose1.orientation.z = 0.007;
     target_pose1.orientation.w = -0.016;
 
-    target_pose1.position.z -= 0.4;
+    target_pose1.position.z -= 0.04;
     approach_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z -= 0.4;
+    target_pose1.position.z -= 0.04;
     approach_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_approach;
@@ -162,29 +162,33 @@ private:
     const double eef_step = 0.1;
 
     double fraction = move_group_arm.computeCartesianPath(approach_waypoints, eef_step, jump_threshold, trajectory_approach);
+    // https://docs.ros.org/en/jade/api/moveit_ros_planning_interface/html/classmoveit_1_1planning__interface_1_1MoveGroup.html#ad6b02d15000d5b17c89b15a0f744b47c
+    // Compute a Cartesian path that follows specified waypoints with a step size of at most eef_step meters between end effector configurations of consecutive points
+    // in the result trajectory. The reference frame for the waypoints is that specified by setPoseReferenceFrame(). No more than jump_threshold is allowed as change 
+    // in distance in the configuration space of the robot (this is to prevent 'jumps' in IK solutions). Collisions are avoided if avoid_collisions is set to true. 
+    // If collisions cannot be avoided, the function fails. Return a value that is between 0.0 and 1.0 indicating the fraction of the path achieved as described by the waypoints. 
+    // Return -1.0 in case of error.
+    RCLCPP_INFO(LOGGER, "fraction %f", fraction);
 
     move_group_arm.execute(trajectory_approach);
     
     // Close Gripper
     RCLCPP_INFO(LOGGER, "Close Gripper!");
     move_group_gripper.setNamedTarget("gripper_close");
-    move_group_gripper.move();/*
+    move_group_gripper.move();
 
     // Retreat
     RCLCPP_INFO(LOGGER, "Retreat from object!");
     std::vector<geometry_msgs::msg::Pose> retreat_waypoints;
-    target_pose1.position.z += 0.0;
+    target_pose1.position.z += 0.04;
     retreat_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z += 0.03;
+    target_pose1.position.z += 0.04;
     retreat_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_retreat;
-
-    fraction = move_group_arm.computeCartesianPath(
-        retreat_waypoints, eef_step, jump_threshold, trajectory_retreat);
-
-    move_group_arm.execute(trajectory_retreat);*/
+    fraction = move_group_arm.computeCartesianPath(retreat_waypoints, eef_step, jump_threshold, trajectory_retreat);
+    move_group_arm.execute(trajectory_retreat);
 
     // Preplace
     RCLCPP_INFO(LOGGER, "Rotating Arm");
@@ -197,11 +201,11 @@ private:
     orientation_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
     orientation_constraint.link_name = move_group_arm.getEndEffectorLink();
     // Create pose orientation constrant as the current orientation
-    auto current_pose = move_group_interface.getCurrentPose();
+    auto current_pose = move_group_arm.getCurrentPose();
     orientation_constraint.orientation = current_pose.pose.orientation;
-    orientation_constraint.absolute_x_axis_tolerance = 0.4;
-    orientation_constraint.absolute_y_axis_tolerance = 0.4;
-    orientation_constraint.absolute_z_axis_tolerance = 0.4;
+    orientation_constraint.absolute_x_axis_tolerance = 0.4; // +-10 deg
+    orientation_constraint.absolute_y_axis_tolerance = 0.4; // +-10 deg
+    orientation_constraint.absolute_z_axis_tolerance = 0.4; // +-10 deg
     orientation_constraint.weight = 1.0;
     // We need to use a generic Constraints message, but this time we add it to the orientation_constraints
     moveit_msgs::msg::Constraints orientation_constraints;
@@ -217,8 +221,9 @@ private:
     target_pose1.orientation.w = -0.016;
     target_pose1.position.x = x_pos;
     target_pose1.position.y = y_pos;
-    target_pose1.position.z = z_pos + 0.4;
+    target_pose1.position.z = z_pos + 0.5;
     move_group_arm.setPoseTarget(target_pose1);
+    move_group_arm.setPlanningTime(15.0);
     move_group_arm.move();
     
     // Open Gripper
