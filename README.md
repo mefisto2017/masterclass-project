@@ -110,15 +110,20 @@ ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
 
 <!-- WEBPAGE -->
 ### Webpage
-1. Launch the rosbridge node:
+1. Start the web application:
+```sh
+cd webapp && \
+python3 -m http.server 7000
+```
+2. Launch the rosbridge node:
 ```sh
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 ```
-2. Check the url:
+3. Check the url:
 ```sh
 rosbridge_address
 ```
-3. Replace the field **rosbridge_address** on the app.js file:
+4. Replace the field **rosbridge_address** on the app.js file:
 ```sh
 rosbridge_address: 'wss://i-00cbdc40fcccd3514.robotigniteacademy.com/7e4d6577-22bd-40b2-b93e-1dab1f84d000/rosbridge/',
 ```
@@ -135,8 +140,6 @@ ros2 param set /D415/D415 align_depth.enable True
 ros2 param set /D415/D415 enable_sync True
 ros2 param set /D415/D415 pointcloud.ordered_pc True
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 <!-- NOTES -->
