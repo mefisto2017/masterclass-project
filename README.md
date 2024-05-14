@@ -127,7 +127,10 @@ rosbridge_address
 ```sh
 rosbridge_address: 'wss://i-00cbdc40fcccd3514.robotigniteacademy.com/7e4d6577-22bd-40b2-b93e-1dab1f84d000/rosbridge/',
 ```
-
+5. Connect to the website:
+```sh
+https://i-072786a1118392265.robotigniteacademy.com/5aa33093-8141-45ca-9477-52ba0c8be6e5/webpage/
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
