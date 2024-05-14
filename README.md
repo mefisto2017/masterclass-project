@@ -18,7 +18,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#update">Update</a></li>
+    <li><a href="#real-robot">Real Robot</a></li>
   </ol>
 </details>
 
@@ -104,6 +104,30 @@ source /root/ros2_ws/install/setup.bash && \
 ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
 ```
 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- WEBPAGE -->
+### Webpage
+1. Launch the rosbridge node:
+```sh
+ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+```
+2. Check the url:
+```sh
+rosbridge_address
+```
+3. Replace the field **rosbridge_address** on the app.js file:
+```sh
+rosbridge_address: 'wss://i-00cbdc40fcccd3514.robotigniteacademy.com/7e4d6577-22bd-40b2-b93e-1dab1f84d000/rosbridge/',
+```
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- REAL ROBOT -->
 ## Real Robot
 Change to ordered pointcloud
 ```sh
@@ -111,6 +135,9 @@ ros2 param set /D415/D415 align_depth.enable True
 ros2 param set /D415/D415 enable_sync True
 ros2 param set /D415/D415 pointcloud.ordered_pc True
 ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 <!-- NOTES -->
 ## Notes
