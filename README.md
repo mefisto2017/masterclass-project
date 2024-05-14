@@ -45,16 +45,16 @@ on a delivery robot platform.
 1. Clone the repo:
    ```sh
    cd ~ && \
-   git clone https://github.com/mefisto2017/Ranger-Mini-Project
+   git clone https://github.com/mefisto2017/masterclass-project
    ```
 2. Compile the image:
    ```sh
-   cd Ranger-Mini-Project && \
+   cd masterclass-project/docker && \
    docker build .
    ```
 3. Tag the image:
    ```sh
-   docker image tag XXXXX engosim:dev
+   docker image tag XXXXX mefistocl/masterclassproject:latest
    ```
 4. Setup the docker compose file:
    ```yaml
@@ -93,12 +93,28 @@ source /root/ros2_ws/install/setup.bash && \
 ros2 launch my_moveit_config move_group.launch.py && \
 ros2 launch my_moveit_config moveit_rviz.launch.py
 ```
+5. Barista robot detector:
+```sh
+source /root/ros2_ws/install/setup.bash && \
+ros2 launch hole_detector hole_detector.launch.py
+```
+6. Pick and Place:
+```sh
+source /root/ros2_ws/install/setup.bash && \
+ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
+```
 
-gazebo-ros-pkgs descargado de la branch ros2 arregla el problema de la pointcloud no ordenada en la depth camara
-https://roboticsbackend.com/ros2-package-for-both-python-and-cpp-nodes/
-https://ros2-tutorial.readthedocs.io/en/latest/using_python_library.html
-
-Real camera
+## Real Robot
+Change to ordered pointcloud
+```sh
 ros2 param set /D415/D415 align_depth.enable True
 ros2 param set /D415/D415 enable_sync True
 ros2 param set /D415/D415 pointcloud.ordered_pc True
+```
+
+<!-- NOTES -->
+## Notes
+* gazebo-ros-pkgs cloned from **ros2** branch fixes the unordered pointcloud obtained in the simulation.
+* https://roboticsbackend.com/ros2-package-for-both-python-and-cpp-nodes/
+* https://ros2-tutorial.readthedocs.io/en/latest/using_python_library.html
+
