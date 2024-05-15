@@ -114,7 +114,8 @@ ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
 1. Start the web application:
 ```sh
 cd /root/webapp && \
-http-server --port 7000
+python3 -m http.server 7000 # The construct website
+http-server --port 7000 # Locally
 ```
 2. Launch the rosbridge node:
 ```sh
