@@ -13,9 +13,13 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev/shm:/dev/shm  
       - /home/mefisto/masterclass/ros2_ws:/root/ros2_ws
+      - /home/mefisto/masterclass/webapp:/root/webapp
     ports:
       - "11345:11345"
       - "11311:11311"
+      - "80:80"
+      - "9090:9090"
+      - "7000:7000"
     #command: "bash -c 'source /root/ros2_ws/install/setup.bash && ros2 launch the_construct_office_gazebo starbots_ur3e.launch.xml'" 
 
 # For ROS2 dont use network_mode: host. ROS2 uses Fast-DDS that would make some conflict when subscribing to the topics in other

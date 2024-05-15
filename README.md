@@ -112,14 +112,14 @@ ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
 ### Webpage
 1. Start the web application:
 ```sh
-cd webapp && \
-python3 -m http.server 7000
+cd /root/webapp && \
+http-server --port 7000
 ```
 2. Launch the rosbridge node:
 ```sh
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 ```
-3. Check the url:
+3. Check the url in the construct, locally the address will be display on the terminal:
 ```sh
 rosbridge_address
 ```
