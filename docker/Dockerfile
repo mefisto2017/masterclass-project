@@ -23,8 +23,9 @@ RUN pip3 install transforms3d
 
 # Install webserver
 RUN mkdir -p /root/nvm
-RUN echo export NVM_DIR="/root/nvm" >> /root/.bashrc && \
-    echo [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" >> /root/.bashrc
+RUN echo 'export NVM_DIR="/root/nvm"' >> /root/.bashrc && \
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /root/.bashrc
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 RUN nvm install v14 && \
     nvm alias default v14 && \
     npm install -g http-server
