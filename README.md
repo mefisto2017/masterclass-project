@@ -27,6 +27,7 @@
 Reinforcement learning project for a robotic arm, the main goal is to train the arm to pick up a coffee cup and place it
 on a delivery robot platform. 
 
+![This is an image](images/preview.png)
 
 <!-- GETTING STARTED -->
 ## Getting Started
