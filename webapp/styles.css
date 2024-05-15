@@ -2,6 +2,9 @@ body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
@@ -12,10 +15,14 @@ header {
 }
 
 main {
+    height: 100vh;
     display: flex;
-    justify-content: flex-start;
-    padding: 20px;
+    background-image: url('./coffee2.png');
+    background-size: cover; 
+    background-position: center;
+    background-repeat: no-repeat;
 }
+
 
 .connection-container {
     display: flex;
@@ -36,141 +43,36 @@ main {
         margin-top: 10px; 
 }
 
-.left-panel {
-    width: 30%;
-    display: flex;
-    position: relative;
-}
 
-.map-3dviewer-container {
+.buttons-container {
     position: relative;
-    flex: 1;
+    margin-top: 50px;
     margin-left: 20px;
 }
 
-.rviz-container {
-    position: relative;
-}
-
-.viewer-container {
-    position: absolute;
-}
-
-#map{
-    position: absolute;
-    border: 1px solid #ddd;
-    height: 400px;
-    width: 400px;
-}
-
-#div3DViewer{
-    position: absolute; /* Use absolute positioning */
-    top: 250px;         
-    left: 250px;        
-    display: inline-block;
-    border: 1px solid rgb(0, 0, 0);
-}
-
-
-
-
-.center-panel {
-    width: 30%;
+.start-button {
+    width: 200px;
+    height: 200px;
+    background-color: green;
+    color: white;
+    border: 5px solid white; /* Added border */
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
     display: flex;
-    position: relative;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s;
 }
 
-.image-waypoints-container {
-    position: relative;
-    flex: 1;
-}
-
-.image-container {
-    position: relative;
-}
-
-.waypoints-container {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-}
-
-#w1 {
-    position: absolute; /* Use absolute positioning */
-    top: 320px;         
-    left: 50px;  
-}
-
-#w2 {
-    position: absolute; /* Use absolute positioning */
-    top: 320px;         
-    left: 320px;  
-}
-
-#w3 {
-    position: absolute; /* Use absolute positioning */
-    top: 220px;         
-    left: 320px;  
-}
-
-#w4 {
-    position: absolute; /* Use absolute positioning */
-    top: 220px;         
-    left: 185px;  
-}
-
-#w5 {
-    position: absolute; /* Use absolute positioning */
-    top: 150px;         
-    left: 185px;  
-}
-
-#w6 {
-    position: absolute; /* Use absolute positioning */
-    top: 150px;         
-    left: 50px;  
-}
-
-#w7 {
-    position: absolute; /* Use absolute positioning */
-    top: 80px;         
-    left: 50px;  
-}
-
-#w8 {
-    position: absolute; /* Use absolute positioning */
-    top: 150px;         
-    left: 320px;  
-}
-
-#w9 {
-    position: absolute; /* Use absolute positioning */
-    top: 80px;         
-    left: 320px;  
-}
-
-
-
-
-
-.right-panel {
-    width: 30%;
-    display: flex;
-    position: relative;
-}
-
-.camera-joystick-container {
-    position: relative;
-    flex: 1;
-    margin-left: 20px;
+.start-button:active {
+    background-color: rgb(166, 237, 13);
 }
 
 .camera-container {
     position: relative;
-}
-
-.joystick-container {
-    position: absolute;
+    margin-top: 20px;
+    margin-left: 500px; 
 }
 
 #robotCamera {
@@ -181,33 +83,4 @@ main {
     width: 640px;
 }
 
-#dragstartzone {
-    position: absolute; /* Use absolute positioning */
-    top: 300px;         
-    left: 550px;        
-    display: inline-block;
-    width: 80px;
-    height: 80px;
-    border: 1px solid #333;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 30%);
-    z-index: 10;
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-}
 
-#dragCircle {
-    position: absolute;
-    z-index: 9;
-    border: 1px solid transparent;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 30%);
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-}
-
-#dragCircle:hover {
-    background-color: lightcoral;
-}

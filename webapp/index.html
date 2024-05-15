@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkpoint 14 - Robot Interface</title>
+    <title>MasterClass Project - Starbot Shop</title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -35,7 +35,7 @@
 <body>
     <div id="vueApp">
         <header>
-            <h1>Checkpoint 14</h1>
+            <h1>Starbot Shop</h1>
             <div>
                 <div class="connection-container">
                     <h3>Connection status:</h3>          
@@ -49,62 +49,21 @@
             </div>
         </header>
 
-        <main>
-            <!-- Map -->
-            <div class="left-panel">
-                <div class="map-3dviewer-container">
-                    <div class="rviz-container">
-                        <div id="map"></div>
-                    </div>
-                    <div class="viewer-container">
-                        <div id="div3DViewer"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Waypoints -->
-            <div class="center-panel">
-                <div class="image-waypoints-container">
-                    <div class="image-container">
-                        <img src="map.png" alt="Robot Image" width="400" height="400" />
-                        <div id="w1"><button @click="sendGoal(0.6, -0.4)">1</button></div>
-                        <div id="w2"><button @click="sendGoal(0.6, 0.4)">2</button></div>
-                        <div id="w3"><button @click="sendGoal(0.2, 0.4)">3</button></div>
-                        <div id="w4"><button @click="sendGoal(0.2, 0.0)">4</button></div>
-                        <div id="w5"><button @click="sendGoal(-0.1, 0.0)">5</button></div>
-                        <div id="w6"><button @click="sendGoal(-0.2, -0.4)">6</button></div>
-                        <div id="w7"><button @click="sendGoal(-0.5, -0.4)">7</button></div>
-                        <div id="w8"><button @click="sendGoal(-0.2, 0.4)">8</button></div>
-                        <div id="w9"><button @click="sendGoal(-0.5, 0.4)">9</button></div>
-                    </div>
-                    <div class="waypoints-container"></div>
-                </div>
-            </div>
-
-            <!-- Camera & Joystick-->
-            <div class="right-panel">
-                <div class="camera-joystick-container">
-                    <div class="camera-container">
-                        <div id="robotCamera"></div>
-                    </div>
-                    <div class="joystick-container">
-                        <div id="dragstartzone" @mousedown="startDrag" @mousemove="doDrag"></div>
-                        <div id="dragCircle" :style="dragCircleStyle"></div>
-                    </div>
-                </div>
+        <main>            
+            <div class="buttons-container">
+                <div id="button"><button class="start-button">Start</button></div>
             </div>
             
+            <div class="camera-container">
+                <div id="robotCamera"></div>
+            </div>
+           
+        
         </main>
 
-        <footer>
-            <div class="card-body">
-                <p>Vertical: {{ joystick.vertical.toFixed(3) }}</p>
-                <p>Horizontal: {{ joystick.horizontal.toFixed(3) }}</p>
-                <p v-for="log in logs">{{ log }}</p>
-            </div>
-    
-        </footer>
     </div>
+
+    
 
     <script src="app.js">
         var script = document.createElement('script');
