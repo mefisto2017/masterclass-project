@@ -5,120 +5,91 @@
 #include <moveit_msgs/msg/display_trajectory.hpp>
 
 #include "grasping_msgs/action/find_graspable_objects.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp_action/rclcpp_action.hpp"
+#include "hole_detector/srv/hole_coordinates.hpp"
+
 #include <inttypes.h>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <chrono>
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("move_group");
 
 class GetPoseClient : public rclcpp::Node {
 public:
   using Find = grasping_msgs::action::FindGraspableObjects;
-  using GoalHandleFind = rclcpp_action::ClientGoalHandle<Find>;
 
-  explicit GetPoseClient(const rclcpp::NodeOptions &node_options = rclcpp::NodeOptions())
-      : Node("get_pose_client", node_options), goal_done_(false) 
-      {
-        // Callback group
-        callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-        rclcpp::SubscriptionOptions options1;
-        options1.callback_group = callback_group_;
-
-        // move it
-        move_group_node_ = rclcpp::Node::make_shared("move_group_interface", node_options);
-
-        
-      
-        this->client_ptr_ = rclcpp_action::create_client<Find>(this->get_node_base_interface(), 
-                                                               this->get_node_graph_interface(),
-                                                               this->get_node_logging_interface(),
-                                                               this->get_node_waitables_interface(), "find_objects");
-
-        this->timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&GetPoseClient::send_goal, this), callback_group_);
-      }
-
-  bool is_goal_done() const { return this->goal_done_; }
-
-  void send_goal() 
+  explicit GetPoseClient(const rclcpp::NodeOptions &node_options = rclcpp::NodeOptions()) : Node("get_pose_client", node_options)
   {
-    using namespace std::placeholders;
-    this->timer_->cancel();
-    this->goal_done_ = false;
+    // Callback group
+    callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    rclcpp::SubscriptionOptions options1;
+    options1.callback_group = callback_group_;
 
-    if (!this->client_ptr_) 
+    // Create subscribers
+    webpage_sub_ = this->create_subscription<std_msgs::msg::Int16>("/webpage", 10, std::bind(&GetPoseClient::webpage_callback, this, std::placeholders::_1), options1); 
+
+    // Move it
+    move_group_node_ = rclcpp::Node::make_shared("move_group_interface", node_options);
+
+    // Hole detector client
+    client_ptr_ = this->create_client<hole_detector::srv::HoleCoordinates>("/holes_coordinates");
+
+    // Wait for the service to be available
+    while (!client_ptr_->wait_for_service(std::chrono::seconds(5))) 
     {
-      RCLCPP_ERROR(this->get_logger(), "Action client not initialized");
+        if (!rclcpp::ok()) 
+        {
+            RCLCPP_ERROR(LOGGER, "Interrupted while waiting for the service. Exiting.");
+            return;
+        }
+        RCLCPP_INFO(LOGGER, "Service not available, waiting again...");
     }
 
-    if (!this->client_ptr_->wait_for_action_server(std::chrono::seconds(10))) 
-    {
-      RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
-      this->goal_done_ = true;
-      return;
-    }
-
-    auto goal_msg = Find::Goal();
-    goal_msg.plan_grasps = false;
-
-    RCLCPP_INFO(this->get_logger(), "Sending goal");
-
-    auto send_goal_options = rclcpp_action::Client<Find>::SendGoalOptions();
-    send_goal_options.goal_response_callback = std::bind(&GetPoseClient::goal_response_callback, this, _1);
-    send_goal_options.feedback_callback = std::bind(&GetPoseClient::feedback_callback, this, _1, _2);
-    send_goal_options.result_callback = std::bind(&GetPoseClient::result_callback, this, _1);
-    auto goal_handle_future = this->client_ptr_->async_send_goal(goal_msg, send_goal_options);
+    // Call the service
+    timer_ = create_wall_timer(std::chrono::milliseconds(250), std::bind(&GetPoseClient::pick_and_place_service, this), callback_group_);
   }
+
 
 private:
   rclcpp::Node::SharedPtr move_group_node_;
   rclcpp::CallbackGroup::SharedPtr callback_group_;
-  rclcpp_action::Client<Find>::SharedPtr client_ptr_;
+  rclcpp::Client<hole_detector::srv::HoleCoordinates>::SharedPtr client_ptr_;
   rclcpp::TimerBase::SharedPtr timer_;
-  bool goal_done_;
+  rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr webpage_sub_;
+  bool go_ = false;
 
-  void goal_response_callback(const GoalHandleFind::SharedPtr &goal_handle) {
-    if (!goal_handle) 
-    {
-      RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
-    } 
-    else 
-    {
-      RCLCPP_INFO(this->get_logger(), "Goal accepted by server, waiting for result");
-    }
-  }
-
-  void feedback_callback(GoalHandleFind::SharedPtr, const std::shared_ptr<const Find::Feedback> feedback) 
+  
+  void pick_and_place(rclcpp::Client<hole_detector::srv::HoleCoordinates>::SharedFuture future_result) 
   {
-    RCLCPP_INFO(this->get_logger(), "Ignoring feedback...");
-  }
+    // Get the response
+    auto response = future_result.get();
 
-  void result_callback(const GoalHandleFind::WrappedResult &result) 
-  {
-    this->goal_done_ = true;
-    switch (result.code) {
-    case rclcpp_action::ResultCode::SUCCEEDED:
-      break;
-    case rclcpp_action::ResultCode::ABORTED:
-      RCLCPP_ERROR(this->get_logger(), "Goal was aborted");
-      return;
-    case rclcpp_action::ResultCode::CANCELED:
-      RCLCPP_ERROR(this->get_logger(), "Goal was canceled");
-      return;
-    default:
-      RCLCPP_ERROR(this->get_logger(), "Unknown result code");
-      return;
-    }
+    // Check for success
+    if (!response->success) RCLCPP_ERROR(LOGGER, "Failed to get hole coordinates. Exiting.");
 
-    RCLCPP_INFO(this->get_logger(), "Result received");
-    RCLCPP_INFO(this->get_logger(), "X: %f", result.result->objects[0].object.primitive_poses[0].position.x);
-    RCLCPP_INFO(this->get_logger(), "Y: %f", result.result->objects[0].object.primitive_poses[0].position.y);
+    RCLCPP_INFO(LOGGER, "Result received");
+    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[1].x,
+                                               response->coordinates[1].y,
+                                               response->coordinates[1].z);
 
-    float x_pos = result.result->objects[0].object.primitive_poses[0].position.x;
-    float y_pos = result.result->objects[0].object.primitive_poses[0].position.y;
 
+    float x_pos = response->coordinates[1].x;
+    float y_pos = response->coordinates[1].y;
+    float z_pos = response->coordinates[1].z;
+
+    /* Coordinates returned by the camera
+       X: 0.327950 , Y: -0.012054
+       My coordinates
+       x = 0.335 , y = -0.016; // replace them  in line 
+           target_pose1.position.x = 0.335;
+           target_pose1.position.y = -0.016;
+
+       then new coordinates:
+       x_pos += 0.335 - 0.327950
+       y_pos += -0.016 + 0.012054
+    */
+    
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(move_group_node_);
     std::thread([&executor]() { executor.spin(); }).detach();
@@ -146,11 +117,23 @@ private:
     move_group_arm.setStartStateToCurrentState();
     move_group_gripper.setStartStateToCurrentState();
 
+    // Set Reference frame and end effector
+    // https://docs.ros.org/en/groovy/api/moveit_ros_planning_interface/html/group__set__pose__goal.html
+    move_group_arm.setPoseReferenceFrame("base_link");
+    std::string rf_string = move_group_arm.getPoseReferenceFrame();
+    char* char_arr_rf = &rf_string[0];
+    RCLCPP_INFO(LOGGER,"Reference frame set to: %s", char_arr_rf);
+
+    move_group_arm.setEndEffectorLink("tool0");
+    std::string ee_string = move_group_arm.getEndEffectorLink();
+    char* char_arr_ee = &ee_string[0];
+    RCLCPP_INFO(LOGGER,"End effector link set to: %s", char_arr_ee);
+    
     // Go Home
     RCLCPP_INFO(LOGGER, "Going Home");
     move_group_arm.setNamedTarget("home");
     move_group_arm.move();
-
+    
     // Pregrasp
     RCLCPP_INFO(LOGGER, "Pregrasp Position");
     move_group_arm.setNamedTarget("pregrasp");
@@ -165,25 +148,32 @@ private:
     RCLCPP_INFO(LOGGER, "Approach to object!");
     geometry_msgs::msg::Pose target_pose1;
     std::vector<geometry_msgs::msg::Pose> approach_waypoints;
-    target_pose1.position.x = x_pos;
-    target_pose1.position.y = y_pos;
-    target_pose1.position.z = 0.254;
-    target_pose1.orientation.x = 0.721;
-    target_pose1.orientation.y = -0.693;
-    target_pose1.orientation.z = -0.018;
-    target_pose1.orientation.w = -0.006;
+    target_pose1.position.x = 0.199;
+    target_pose1.position.y = 0.365;
+    target_pose1.position.z = 0.397;
+    target_pose1.orientation.x = 0.917;
+    target_pose1.orientation.y = -0.399;
+    target_pose1.orientation.z = 0.007;
+    target_pose1.orientation.w = -0.016;
 
-    target_pose1.position.z -= 0.02;
+    target_pose1.position.z -= 0.04;
     approach_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z -= 0.02;
+    target_pose1.position.z -= 0.04;
     approach_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_approach;
     const double jump_threshold = 0.0;
-    const double eef_step = 0.01;
+    const double eef_step = 0.1;
 
     double fraction = move_group_arm.computeCartesianPath(approach_waypoints, eef_step, jump_threshold, trajectory_approach);
+    // https://docs.ros.org/en/jade/api/moveit_ros_planning_interface/html/classmoveit_1_1planning__interface_1_1MoveGroup.html#ad6b02d15000d5b17c89b15a0f744b47c
+    // Compute a Cartesian path that follows specified waypoints with a step size of at most eef_step meters between end effector configurations of consecutive points
+    // in the result trajectory. The reference frame for the waypoints is that specified by setPoseReferenceFrame(). No more than jump_threshold is allowed as change 
+    // in distance in the configuration space of the robot (this is to prevent 'jumps' in IK solutions). Collisions are avoided if avoid_collisions is set to true. 
+    // If collisions cannot be avoided, the function fails. Return a value that is between 0.0 and 1.0 indicating the fraction of the path achieved as described by the waypoints. 
+    // Return -1.0 in case of error.
+    RCLCPP_INFO(LOGGER, "fraction %f", fraction);
 
     move_group_arm.execute(trajectory_approach);
     
@@ -195,30 +185,92 @@ private:
     // Retreat
     RCLCPP_INFO(LOGGER, "Retreat from object!");
     std::vector<geometry_msgs::msg::Pose> retreat_waypoints;
-    target_pose1.position.z += 0.0;
+    target_pose1.position.z += 0.04;
     retreat_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z += 0.03;
+    target_pose1.position.z += 0.04;
     retreat_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_retreat;
-
-    fraction = move_group_arm.computeCartesianPath(
-        retreat_waypoints, eef_step, jump_threshold, trajectory_retreat);
-
+    fraction = move_group_arm.computeCartesianPath(retreat_waypoints, eef_step, jump_threshold, trajectory_retreat);
     move_group_arm.execute(trajectory_retreat);
 
-    // Place
+    // Preplace
     RCLCPP_INFO(LOGGER, "Rotating Arm");
-    move_group_arm.setNamedTarget("place");
-    move_group_arm.move();
+    move_group_arm.setNamedTarget("preplace");
+    move_group_arm.move(); 
 
+    // Define orientation constraint
+    // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
+    moveit_msgs::msg::OrientationConstraint orientation_constraint;
+    orientation_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
+    orientation_constraint.link_name = move_group_arm.getEndEffectorLink();
+    // Create pose orientation constrant as the current orientation
+    auto current_pose = move_group_arm.getCurrentPose();
+    orientation_constraint.orientation = current_pose.pose.orientation;
+    orientation_constraint.absolute_x_axis_tolerance = 0.4; // +-10 deg
+    orientation_constraint.absolute_y_axis_tolerance = 0.4; // +-10 deg
+    orientation_constraint.absolute_z_axis_tolerance = 0.4; // +-10 deg
+    orientation_constraint.weight = 1.0;
+    // We need to use a generic Constraints message, but this time we add it to the orientation_constraints
+    moveit_msgs::msg::Constraints orientation_constraints;
+    orientation_constraints.orientation_constraints.emplace_back(orientation_constraint);
+    // Set constraints
+    move_group_arm.setPathConstraints(orientation_constraints);
+
+    // Place
+    RCLCPP_INFO(LOGGER, "Placing");
+    target_pose1.orientation.x = 0.917;
+    target_pose1.orientation.y = -0.399;
+    target_pose1.orientation.z = 0.007;
+    target_pose1.orientation.w = -0.016;
+    target_pose1.position.x = x_pos;
+    target_pose1.position.y = y_pos;
+    target_pose1.position.z = z_pos + 0.5;
+    move_group_arm.setPoseTarget(target_pose1);
+    move_group_arm.setPlanningTime(15.0);
+    move_group_arm.move();
+    
     // Open Gripper
     RCLCPP_INFO(LOGGER, "Release Object!");
     move_group_gripper.setNamedTarget("gripper_open");
     move_group_gripper.move();
+
+    // Go Home
+    RCLCPP_INFO(LOGGER, "Going Home");
+    move_group_arm.setNamedTarget("home");
+    move_group_arm.move();
   }
+
+  void pick_and_place_service()
+  {
+    /*
+        Calls the hole detector service and start
+        the arm movement
+    */
+    if (go_)
+    {
+      // Reset flag
+      go_ = false;
+      // Call the service
+      auto request = std::make_shared<hole_detector::srv::HoleCoordinates::Request>();
+      client_ptr_->async_send_request(request, std::bind(&GetPoseClient::pick_and_place_callback, this, std::placeholders::_1));
+    }
+  }
+
+  void webpage_callback(const std_msgs::msg::Int16::SharedPtr msg) 
+  {
+    /*
+        Check if the Start button was pressed on the website
+    */
+    if (msg->data == 1)
+    {
+      go_ = true;
+    }
+  }
+
 }; // class GetPoseClient
+
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
