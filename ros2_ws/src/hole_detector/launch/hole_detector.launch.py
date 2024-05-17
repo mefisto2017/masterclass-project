@@ -12,7 +12,8 @@ def generate_launch_description():
         executable='holedetector.py',
         name='hole_detector_node',
         output='screen',
-        #remappings=[('/depth/points' , '/wrist_rgbd_depth_sensor/points')],  # Add remappings if necessary
+        remappings=[('/wrist_rgbd_depth_sensor/points', '/D415/depth/color/points' ),
+                    ('/wrist_rgbd_depth_sensor/image_raw', '/D415/color/image_raw')],  # Add remappings if necessary
     )
 
     return LaunchDescription([
