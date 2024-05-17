@@ -59,7 +59,8 @@ class HoleDetector(Node):
         self.mutex_ = threading.Lock()
 
         # Frames to transform
-        self.source_frame_ = "wrist_rgbd_camera_depth_optical_frame"
+        # self.source_frame_ = "wrist_rgbd_camera_depth_optical_frame" # simulation
+        self.source_frame_ = "D415_depth_optical_frame" # real camera
         self.target_frame_ = "base_link"
 
         # Parameter Initialization
@@ -122,11 +123,16 @@ class HoleDetector(Node):
         # Change to gray scale 
         gray = cv2.cvtColor(self.cv_image_, cv2.COLOR_BGR2GRAY)
 
+        # Simulation: 104
+        # Real rgb: 120
+        # Aligned: -
+        ret, thresh1 = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+
         # Blur using 3 * 3 kernel. 
-        gray_blurred = cv2.blur(gray, (3, 3)) 
+        blurred = cv2.blur(thresh1, (3, 3)) 
           
         # Apply Hough transform on the blurred image. 
-        detected_circles = cv2.HoughCircles(gray_blurred,  
+        detected_circles = cv2.HoughCircles(blurred,  
                                             cv2.HOUGH_GRADIENT_ALT, 
                                             1.5, 
                                             10, 
@@ -154,7 +160,7 @@ class HoleDetector(Node):
 
                     # Save the coordinates
                     coor = self.get_world_coord([a, b])
-                    if coor is None:
+                    if len(coor) < 3:
                         continue
 
                     self.holes_coordinates_.append(coor)
