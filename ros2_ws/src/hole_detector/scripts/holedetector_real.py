@@ -16,17 +16,13 @@ import asyncio
 import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from sensor_msgs.msg import PointCloud2
-from sensor_msgs.msg import CameraInfo
+from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import Point
 from hole_detector.srv import HoleCoordinates 
 
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-
-import ros2_numpy as rnp
 
 # transformation.py was not included in tf2
 # https://answers.ros.org/question/368446/how-do-i-use-tf2_ros-to-convert-from-quaternions-to-euler/
@@ -43,13 +39,12 @@ class HoleDetector(Node):
 
         # Service callback
         self.srv_ = self.create_service(HoleCoordinates, 'holes_coordinates', self.holes_coordinates_callback)
-
-        # Camera pointcloud topic subscriber
-        self.pc_subscriber_ = self.create_subscription(PointCloud2, '/wrist_rgbd_depth_sensor/points', self.point_callback, 10)
-
+        # Camera info topic subscriber
+        self.camera_info_subscriber_ = self.create_subscription(PointCloud2, '/wrist_rgbd_depth_sensor/points', self.camera_info_callback, 10)
         # Camera image subscriber
         self.image_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_callback, 10)
-
+        # Camera depth aligned subscriber
+        self.image_depth_aligned_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_depth_aligned_callback, 10)
         # Image publisher just for visualization
         self.image_publisher_ = self.create_publisher(Image, '/detected_holes_image', 10)
 
@@ -59,7 +54,6 @@ class HoleDetector(Node):
         self.mutex_ = threading.Lock()
 
         # Frames to transform
-        # self.source_frame_ = "wrist_rgbd_camera_depth_optical_frame" # simulation
         self.source_frame_ = "D415_depth_optical_frame" # real camera
         self.target_frame_ = "base_link"
 
@@ -93,17 +87,22 @@ class HoleDetector(Node):
         return response
 
 
-    def point_callback(self, msg):
+    def camera_info_callback(self, msg):
         """
-            Extract the x,y,z coordinates as seen as
-            the camera
+            Get intrinsic parameter from the camera
+                Intrinsic camera matrix for the raw (distorted) images.
+                    [fx  0 cx]
+                K = [ 0 fy cy]
+                    [ 0  0  1]
         """
-
-        # Reshape data into a 2D array
-        cloud_array = rnp.point_cloud2.pointcloud2_to_array(msg)
-        # print(cloud_array.dtype.names) # ('x', 'y', 'z', 'rgb')
-        # Extract x, y, z coordinates
-        self.xyz_ = rnp.point_cloud2.get_xyz_points(cloud_array, remove_nans=False)
+        camera_parameter = np.array(msg.k, dtype=np.float32)
+        camera_parameter = camera_parameter.reshape((3, 3))
+        self.fx_ = camera_parameter[0][0]
+        self.fy_ = camera_parameter[0][0]
+        self.cx_ = camera_parameter[0][0]
+        self.cy_ = camera_parameter[0][0]
+        self.destroy_subscription(self.image_info_subscriber_) # After getting the parameters no need to call again
+        self.get_logger().info("Intrisic parameters captured")
 
 
     def image_callback(self, msg):
@@ -182,6 +181,10 @@ class HoleDetector(Node):
         # Create and publish the image with the holes drown
         ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="passthrough")
         self.image_publisher_.publish(ros_image)
+
+
+    def image_depth_aligned_callback(self, msg):
+        self.cv_depth_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="passthrough")
 
 
     def tf_calculation(self):
