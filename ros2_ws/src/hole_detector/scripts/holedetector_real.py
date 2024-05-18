@@ -102,7 +102,7 @@ class HoleDetector(Node):
         self.fy_ = camera_parameter[1, 1]
         self.cx_ = camera_parameter[0, 2]
         self.cy_ = camera_parameter[1, 2]
-        self.destroy_subscription(self.image_info_subscriber_) # After getting the parameters no need to call again
+        self.destroy_subscription(self.camera_info_subscriber_) # After getting the parameters no need to call again
         self.get_logger().info("Intrisic parameters captured")
         self.intrinsic_flag_ = True
 
@@ -124,15 +124,17 @@ class HoleDetector(Node):
             self.get_logger().warning("Camera intrisic parameters not loaded yet")
             return
 
-        self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        # Save image for cv analisis
+        # cv2.imwrite('saved_image.png', self.cv_image_)
 
         # Change to gray scale 
         gray = cv2.cvtColor(self.cv_image_, cv2.COLOR_BGR2GRAY)
 
         # Simulation: 104
         # Real rgb: 120
-        # Aligned: -
-        ret, thresh1 = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+        # Saved: 112
+        ret, thresh1 = cv2.threshold(gray, 112, 255, cv2.THRESH_BINARY_INV)
 
         # Blur using 3 * 3 kernel. 
         blurred = cv2.blur(thresh1, (3, 3)) 
@@ -144,8 +146,8 @@ class HoleDetector(Node):
                                             10, 
                                             param1 = 300, 
                                             param2 = 0.8, 
-                                            minRadius = 20, 
-                                            maxRadius = 50) 
+                                            minRadius = 10, 
+                                            maxRadius = 15) 
 
         # Thread safe for holes_coordinates variable
         with self.mutex_:
@@ -159,15 +161,16 @@ class HoleDetector(Node):
               
                 for pt in detected_circles[0, :]: 
                     a, b, r = pt[0], pt[1], pt[2]                     
-                    # Draw the circumference of the circle. 
-                    cv2.circle(self.cv_image_, (a, b), r, (0, 255, 0), 2)               
-                    # Draw a small circle (of radius 1) to show the center. 
-                    cv2.circle(self.cv_image_, (a, b), 1, (0, 0, 255), 3)
 
                     # Save the coordinates
                     coor = self.get_world_coord([a, b])
                     if len(coor) < 3:
                         continue
+
+                    # Draw the circumference of the circle. 
+                    cv2.circle(self.cv_image_, (a, b), r, (0, 255, 0), 2)               
+                    # Draw a small circle (of radius 1) to show the center. 
+                    cv2.circle(self.cv_image_, (a, b), 1, (0, 0, 255), 3)
 
                     self.holes_coordinates_.append(coor)
                     # Write the coordinates on the image
@@ -186,7 +189,7 @@ class HoleDetector(Node):
                self.holes_coordinates_ = []
             
         # Create and publish the image with the holes drown
-        ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="passthrough")
+        ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="bgr8")
         self.image_publisher_.publish(ros_image)
 
 
@@ -254,7 +257,9 @@ class HoleDetector(Node):
         z = self.cv_depth_[image_coor[0]][image_coor[1]]
         x = z * ((image_coor[0] - self.cx_) / self.fx_)
         y = z * ((image_coor[1] - self.cy_) / self.fy_)
-        xyz = np.array([x, y, z])
+        # Log the values of x, y and z
+        #self.get_logger().info(f'Computed x: {x} mm, y: {y} mm, z: {z} mm')
+        xyz = np.append(np.array([x, y, z]), 1)
         xyz = np.reshape(xyz, (4,1))
         # Transform the camera coordinates into world coordinates
         world_coordinates = self.homogeneous_matrix_@xyz
