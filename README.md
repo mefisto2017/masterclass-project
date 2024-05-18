@@ -74,36 +74,36 @@ on a delivery robot platform.
 <!-- USAGE -->
 ## Usage
 1. Allow the container to use the screen:
-```sh
-xhost +
-```
+   ```sh
+   xhost +
+   ```
 2. Start the container:
-```sh
-docker-compose run masterclass_project /bin/bash
-```
+   ```sh
+   docker-compose run masterclass_project /bin/bash
+   ```
 3. Compile and launch the simulation:
-```sh
-cd /root/ros2_ws && \
-colcon build && \
-source /root/ros2_ws/install/setup.bash && \
-ros2 launch the_construct_office_gazebo starbots_ur3e.launch.xml
-```
+   ```sh
+   cd /root/ros2_ws && \
+   colcon build && \
+   source /root/ros2_ws/install/setup.bash && \
+   ros2 launch the_construct_office_gazebo starbots_ur3e.launch.xml
+   ```
 4. Moveit:
-```sh
-source /root/ros2_ws/install/setup.bash && \
-ros2 launch my_moveit_config move_group.launch.py && \
-ros2 launch my_moveit_config moveit_rviz.launch.py
-```
+   ```sh
+   source /root/ros2_ws/install/setup.bash && \
+   ros2 launch my_moveit_config move_group.launch.py && \
+   ros2 launch my_moveit_config moveit_rviz.launch.py
+   ```
 5. Barista robot detector:
-```sh
-source /root/ros2_ws/install/setup.bash && \
-ros2 launch hole_detector hole_detector.launch.py
-```
+   ```sh
+   source /root/ros2_ws/install/setup.bash && \
+   ros2 launch hole_detector hole_detector.launch.py
+   ```
 6. Pick and Place:
-```sh
-source /root/ros2_ws/install/setup.bash && \
-ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
-```
+   ```sh
+   source /root/ros2_ws/install/setup.bash && \
+   ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
+   ```
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -112,27 +112,27 @@ ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
 <!-- WEBPAGE -->
 ### Webpage
 1. Start the web application:
-```sh
-cd /root/webapp && \
-python3 -m http.server 7000 # The construct website
-http-server --port 7000 # Locally
-```
+   ```sh
+   cd /root/webapp && \
+   python3 -m http.server 7000 # The construct website
+   http-server --port 7000 # Locally
+   ```
 2. Launch the rosbridge node:
-```sh
-ros2 launch rosbridge_server rosbridge_websocket_launch.xml
-```
+   ```sh
+   ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+   ```
 3. Check the url in the construct, locally the address will be display on the terminal:
-```sh
-rosbridge_address
-```
+   ```sh
+   rosbridge_address
+   ```
 4. Replace the field **rosbridge_address** on the app.js file:
-```sh
-rosbridge_address: 'wss://i-00cbdc40fcccd3514.robotigniteacademy.com/7e4d6577-22bd-40b2-b93e-1dab1f84d000/rosbridge/',
-```
+   ```sh
+   rosbridge_address: 'wss://i-00cbdc40fcccd3514.robotigniteacademy.com/7e4d6577-22bd-40b2-b93e-1dab1f84d000/rosbridge/',
+   ```
 5. Connect to the website:
-```sh
-https://i-072786a1118392265.robotigniteacademy.com/5aa33093-8141-45ca-9477-52ba0c8be6e5/webpage/
-```
+   ```sh
+   https://i-072786a1118392265.robotigniteacademy.com/5aa33093-8141-45ca-9477-52ba0c8be6e5/webpage/
+   ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
