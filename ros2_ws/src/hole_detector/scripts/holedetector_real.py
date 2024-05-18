@@ -40,11 +40,11 @@ class HoleDetector(Node):
         # Service callback
         self.srv_ = self.create_service(HoleCoordinates, 'holes_coordinates', self.holes_coordinates_callback)
         # Camera info topic subscriber
-        self.camera_info_subscriber_ = self.create_subscription(PointCloud2, '/wrist_rgbd_depth_sensor/points', self.camera_info_callback, 10)
+        self.camera_info_subscriber_ = self.create_subscription(CameraInfo, '/D415/aligned_depth_to_color/camera_info', self.camera_info_callback, 10)
         # Camera image subscriber
-        self.image_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_callback, 10)
+        self.image_subscriber_ = self.create_subscription(Image, '/D415/color/image_raw', self.image_callback, 10)
         # Camera depth aligned subscriber
-        self.image_depth_aligned_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_depth_aligned_callback, 10)
+        self.image_depth_aligned_subscriber_ = self.create_subscription(Image, '/D415/aligned_depth_to_color/image_raw', self.image_depth_aligned_callback, 10)
         # Image publisher just for visualization
         self.image_publisher_ = self.create_publisher(Image, '/detected_holes_image', 10)
 
@@ -58,9 +58,10 @@ class HoleDetector(Node):
         self.target_frame_ = "base_link"
 
         # Parameter Initialization
+        self.cv_depth_ = np.array([], dtype=np.float32)
         self.homogeneous_matrix_ = np.array([], dtype=np.float32)
-        self.xyz_ = []
         self.holes_coordinates_ = []
+        self.intrinsic_flag_ = False
 
         # Load extrinsic matrix 
         while not self.tf_calculation():
@@ -97,12 +98,13 @@ class HoleDetector(Node):
         """
         camera_parameter = np.array(msg.k, dtype=np.float32)
         camera_parameter = camera_parameter.reshape((3, 3))
-        self.fx_ = camera_parameter[0][0]
-        self.fy_ = camera_parameter[0][0]
-        self.cx_ = camera_parameter[0][0]
-        self.cy_ = camera_parameter[0][0]
+        self.fx_ = camera_parameter[0, 0]
+        self.fy_ = camera_parameter[1, 1]
+        self.cx_ = camera_parameter[0, 2]
+        self.cy_ = camera_parameter[1, 2]
         self.destroy_subscription(self.image_info_subscriber_) # After getting the parameters no need to call again
         self.get_logger().info("Intrisic parameters captured")
+        self.intrinsic_flag_ = True
 
 
     def image_callback(self, msg):
@@ -115,6 +117,11 @@ class HoleDetector(Node):
         # Check if the extrinsic parameter were already loaded
         if not np.any(self.homogeneous_matrix_):
             self.get_logger().warning("Camera extrinsic parameters not loaded yet")
+            return
+
+        # Check if the intrisic parameter were already loaded
+        if not self.intrinsic_flag_:
+            self.get_logger().warning("Camera intrisic parameters not loaded yet")
             return
 
         self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="passthrough")
@@ -239,11 +246,15 @@ class HoleDetector(Node):
             Transform the camera coordinates
             into the world coordinates
         """
-        dim = np.shape(self.xyz_)
-        
+        # Check array dimensions
+        dim = np.shape(self.cv_depth_)
         if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
-        xyz = np.array(np.append(self.xyz_[image_coor[0]][image_coor[1]], 1))
+        # Get camera coordinates
+        z = self.cv_depth_[image_coor[0]][image_coor[1]]
+        x = z * ((image_coor[0] - self.cx_) / self.fx_)
+        y = z * ((image_coor[1] - self.cy_) / self.fy_)
+        xyz = np.array([x, y, z])
         xyz = np.reshape(xyz, (4,1))
         # Transform the camera coordinates into world coordinates
         world_coordinates = self.homogeneous_matrix_@xyz
