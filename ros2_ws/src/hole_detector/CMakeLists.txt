@@ -60,7 +60,8 @@ install(TARGETS
 
 # Install Python executables
 install(PROGRAMS
-  scripts/holedetector.py
+  scripts/holedetector_sim.py
+  scripts/holedetector_real.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
