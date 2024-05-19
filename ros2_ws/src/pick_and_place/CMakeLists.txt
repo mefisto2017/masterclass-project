@@ -30,6 +30,7 @@ find_package(grasping_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(hole_detector REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # Include Cpp "include" directory
 include_directories(include)
@@ -60,9 +61,24 @@ ament_target_dependencies(pick_and_place_perception_sim
     grasping_msgs
     hole_detector)
 
+add_executable(pick_and_place_perception src/pick_and_place_perception.cpp)
+ament_target_dependencies(pick_and_place_perception
+    ament_cmake
+    rclcpp
+    rclcpp_action
+    moveit_core
+    moveit_ros_planning_interface
+    interactive_markers
+    moveit_ros_planning
+    control_msgs
+    grasping_msgs
+    hole_detector
+    std_msgs)
+
 # Install the executable
 install(TARGETS 
   pick_and_place_perception_sim
+  pick_and_place_perception
     DESTINATION lib/${PROJECT_NAME}
 )
 

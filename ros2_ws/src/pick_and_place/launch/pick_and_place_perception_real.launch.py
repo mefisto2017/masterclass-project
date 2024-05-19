@@ -24,9 +24,9 @@ def generate_launch_description():
     moveit_config = MoveItConfigsBuilder("name", package_name="my_moveit_config").to_moveit_configs()
 
     ppp_node = Node(
-        name="pick_and_place_perception_sim",
+        name="pick_and_place_perception",
         package="pick_and_place",
-        executable="pick_and_place_perception_sim",
+        executable="pick_and_place_perception",
         output="screen",
         parameters=[moveit_config.robot_description,
                     moveit_config.robot_description_semantic,

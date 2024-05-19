@@ -7,6 +7,8 @@
 #include "grasping_msgs/action/find_graspable_objects.hpp"
 #include "hole_detector/srv/hole_coordinates.hpp"
 
+#include "std_msgs/msg/int16.hpp"
+
 #include <inttypes.h>
 #include <iostream>
 #include <memory>
@@ -296,7 +298,7 @@ private:
       go_ = false;
       // Call the service
       auto request = std::make_shared<hole_detector::srv::HoleCoordinates::Request>();
-      client_ptr_->async_send_request(request, std::bind(&GetPoseClient::pick_and_place_callback, this, std::placeholders::_1));
+      client_ptr_->async_send_request(request, std::bind(&GetPoseClient::pick_and_place, this, std::placeholders::_1));
     }
   }
 
