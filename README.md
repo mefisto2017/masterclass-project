@@ -97,7 +97,7 @@ on a delivery robot platform.
 5. Barista robot detector:
    ```sh
    source /root/ros2_ws/install/setup.bash && \
-   ros2 launch hole_detector hole_detector.launch.py
+   ros2 launch hole_detector hole_detector_sim.launch.py
    ```
 6. Pick and Place:
    ```sh
