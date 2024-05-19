@@ -193,19 +193,37 @@ private:
     // Preplace
     RCLCPP_INFO(LOGGER, "Rotating Arm");
     move_group_arm.setNamedTarget("preplace");
+    move_group_arm.move();
+
+    // Hover
+    RCLCPP_INFO(LOGGER, "Hovering");
+    move_group_arm.setNamedTarget("hover");
     move_group_arm.move(); 
 
+    // Place
+    RCLCPP_INFO(LOGGER, "Placing");
+    auto current_pose = move_group_arm.getCurrentPose();
+    geometry_msgs::msg::Pose target_pose2;
+    target_pose2.orientation = current_pose.pose.orientation;
+    target_pose2.position.x = x_pos;
+    target_pose2.position.y = y_pos;
+    target_pose2.position.z = z_pos;
+    //PERFECT PLACE GOT BY HAND
+    target_pose2.position.x = -0.317;
+    target_pose2.position.y = -0.015;
+    target_pose2.position.z = -0.239;
+    
     // Define orientation constraint
     // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
+    // TIENE PROBLEMAS LA POSE QUEDA RANDOM
     moveit_msgs::msg::OrientationConstraint orientation_constraint;
     orientation_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
     orientation_constraint.link_name = move_group_arm.getEndEffectorLink();
     // Create pose orientation constrant as the current orientation
-    auto current_pose = move_group_arm.getCurrentPose();
     orientation_constraint.orientation = current_pose.pose.orientation;
-    orientation_constraint.absolute_x_axis_tolerance = 0.4; // +-10 deg
-    orientation_constraint.absolute_y_axis_tolerance = 0.4; // +-10 deg
-    orientation_constraint.absolute_z_axis_tolerance = 0.4; // +-10 deg
+    orientation_constraint.absolute_x_axis_tolerance = 0.2; // +-10 deg
+    orientation_constraint.absolute_y_axis_tolerance = 0.2; // +-10 deg
+    orientation_constraint.absolute_z_axis_tolerance = 3.14159; // +-10 deg
     orientation_constraint.weight = 1.0;
     // We need to use a generic Constraints message, but this time we add it to the orientation_constraints
     moveit_msgs::msg::Constraints orientation_constraints;
@@ -213,18 +231,40 @@ private:
     // Set constraints
     move_group_arm.setPathConstraints(orientation_constraints);
 
-    // Place
-    RCLCPP_INFO(LOGGER, "Placing");
-    target_pose1.orientation.x = 0.917;
-    target_pose1.orientation.y = -0.399;
-    target_pose1.orientation.z = 0.007;
-    target_pose1.orientation.w = -0.016;
-    target_pose1.position.x = x_pos;
-    target_pose1.position.y = y_pos;
-    target_pose1.position.z = z_pos + 0.5;
-    move_group_arm.setPoseTarget(target_pose1);
-    move_group_arm.setPlanningTime(15.0);
-    move_group_arm.move();
+    // Plan contraint
+    /*moveit_msgs::msg::PositionConstraint plane_constraint;
+    plane_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
+    plane_constraint.link_name = move_group_arm.getEndEffectorLink();
+    shape_msgs::msg::SolidPrimitive plane;
+    plane.type = shape_msgs::msg::SolidPrimitive::BOX;
+    plane.dimensions = { 1.0, 1.0, 0.2};
+    plane_constraint.constraint_region.primitives.emplace_back(plane);
+
+    geometry_msgs::msg::Pose plane_pose;
+    auto current_pose = move_group_arm.getCurrentPose();
+    plane_pose.position.x = current_pose.pose.position.x;
+    plane_pose.position.y = current_pose.pose.position.y;
+    plane_pose.position.z = current_pose.pose.position.z;
+    plane_pose.orientation.x = 0.0;
+    plane_pose.orientation.y = 0.0;
+    plane_pose.orientation.z = 0.0;
+    plane_pose.orientation.w = 1.0;
+    plane_constraint.constraint_region.primitive_poses.emplace_back(plane_pose);
+    plane_constraint.weight = 1.0;
+
+    moveit_msgs::msg::Constraints plane_constraints;
+    plane_constraints.position_constraints.emplace_back(plane_constraint);
+    plane_constraints.name = "use_equality_constraints";
+    move_group_arm.setPathConstraints(plane_constraints);*/
+
+    move_group_arm.setPoseTarget(target_pose2);
+
+
+    // Plan and move
+    move_group_arm.setPlanningTime(40.0);
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+    move_group_arm.plan(plan);
+    move_group_arm.execute(plan);
     
     // Open Gripper
     RCLCPP_INFO(LOGGER, "Release Object!");
@@ -232,6 +272,7 @@ private:
     move_group_gripper.move();
 
     // Go Home
+    move_group_arm.clearPathConstraints();
     RCLCPP_INFO(LOGGER, "Going Home");
     move_group_arm.setNamedTarget("home");
     move_group_arm.move();

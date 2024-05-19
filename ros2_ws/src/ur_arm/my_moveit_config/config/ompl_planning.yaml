@@ -17,7 +17,7 @@ planner_configs:
     planners: "SBLkConfigDefault,RRTstarkConfigDefault,PRMstarkConfigDefault,BFMTkConfigDefault"  # A comma-separated list of planner types (e.g., "PRM,EST,RRTConnect"Optionally, planner parameters can be passed to change the default:"PRM[max_nearest_neighbors=5],EST[goal_bias=.5],RRT[range=10. goal_bias=.1]"
   SBLkConfigDefault:
     type: geometric::SBL
-    range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    range: 1.5  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
   ESTkConfigDefault:
     type: geometric::EST
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0 setup()
@@ -42,7 +42,7 @@ planner_configs:
     min_valid_path_fraction: 0.5  # Accept partially valid moves above fraction. default: 0.5
   RRTkConfigDefault:
     type: geometric::RRT
-    range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    range: 1.5  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
     goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
   RRTConnectkConfigDefault:
     type: geometric::RRTConnect
@@ -140,8 +140,10 @@ planner_configs:
     type: geometric::TrajOpt
 
 ur_manipulator:
+  default_planner_config: RRTkConfigDefault # INCREASE RANGE IN THE PLANNER!!!!!!!!!!!!!
+  longest_valid_segment_fraction: 0.005
   enforce_constrained_state_space: true
-  projection_evaluator: joints(shoulder_pan_joint,shoulder_lift_joint)
+  projection_evaluator: joints(shoulder_pan_joint)
   planner_configs:
     - APSConfigDefault
     - SBLkConfigDefault
