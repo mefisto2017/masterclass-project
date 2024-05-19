@@ -272,6 +272,7 @@ private:
     move_group_gripper.move();
 
     // Go Home
+    // https://moveit.picknik.ai/main/api/html/classmoveit_1_1planning__interface_1_1MoveGroupInterface_1_1MoveGroupInterfaceImpl.html#a80bf5d4f466b9d8edbc197a7e8e2a691
     move_group_arm.clearPathConstraints();
     RCLCPP_INFO(LOGGER, "Going Home");
     move_group_arm.setNamedTarget("home");
