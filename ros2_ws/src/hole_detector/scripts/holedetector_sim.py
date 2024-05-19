@@ -82,9 +82,9 @@ class HoleDetector(Node):
             for pt in self.holes_coordinates_:
                 # Fill the message
                 point = Point()
-                point.x = float(pt[0])
-                point.y = float(pt[1])
-                point.z = float(pt[2])
+                point.x = -0.317 #float(pt[0])
+                point.y = -0.015 #float(pt[1])
+                point.z = -0.239 #float(pt[2])
                 response.coordinates.append(point)
         else:
             response.success = False
@@ -125,7 +125,7 @@ class HoleDetector(Node):
         # Simulation: 104
         # Real rgb: 120
         # Aligned: -
-        ret, thresh1 = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+        ret, thresh1 = cv2.threshold(gray, 104, 255, cv2.THRESH_BINARY)
 
         # Blur using 3 * 3 kernel. 
         blurred = cv2.blur(thresh1, (3, 3)) 
