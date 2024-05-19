@@ -73,6 +73,7 @@ on a delivery robot platform.
 
 <!-- USAGE -->
 ## Usage
+### Local Simulation
 1. Allow the container to use the screen:
    ```sh
    xhost +
@@ -105,47 +106,92 @@ on a delivery robot platform.
    ros2 launch pick_and_place pick_and_place_perception_sim.launch.py
    ```
 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<!-- WEBPAGE -->
 ### Webpage
 1. Start the web application:
    ```sh
-   cd /root/webapp && \
-   python3 -m http.server 7000 # The construct website
+   cd /root/webpage_ws && \
    http-server --port 7000 # Locally
    ```
 2. Launch the rosbridge node:
    ```sh
    ros2 launch rosbridge_server rosbridge_websocket_launch.xml
    ```
-3. Check the url in the construct, locally the address will be display on the terminal:
+3. Launch the web video server node:
+   ```sh
+   ros2 run web_video_server web_video_server
+   ```
+4. Connect to the website:
+   ```sh
+   https://ip/webpage/
+   ```  
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- REAL ROBOT -->
+## The construct
+### Usage Real Robot
+1. Change simulation time to false:
+   ```sh
+   {"use_sim_time": False}
+   vim ~/ros2_ws/src/my_moveit_config/launch/move_group.launch.py
+   ```
+2. Install packages:
+   ```sh
+   sudo apt update
+   sudo apt install -y ros-humble-async-web-server-cpp
+   ```
+3. Compile:
+   ```sh
+   cd ~/ros2_ws && \
+   rm -rf /src/gazebo_ros_pkgs
+   colcon build && \
+   source ~/ros2_ws/install/setup.bash && \
+   ros2 param set /D415/D415 align_depth.enable True
+   ```
+4. Moveit:
+   ```sh
+   ros2 launch my_moveit_config move_group.launch.py 
+   ```
+5. Barista robot detector:
+   ```sh
+   source ~/ros2_ws/install/setup.bash && \
+   ros2 launch hole_detector hole_detector_real.launch.py
+   ```
+6. Pick and Place:
+   ```sh
+   source ~/ros2_ws/install/setup.bash && \
+   ros2 launch pick_and_place pick_and_place_perception_real.launch.py
+   ```
+
+### Webpage
+1. Start the web application:
+   ```sh
+   cd ~/webpage_ws && \
+   python3 -m http.server 7000 # The construct website
+   ```
+2. Launch the rosbridge node:
+   ```sh
+   ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+   ```
+3. Launch web video server:
+   ```sh
+   source ~/ros2_ws/install/setup.bash && \
+   ros2 run web_video_server web_video_server --ros-args -p port:=11315
+   ```
+4. Check the url in the construct, locally the address will be display on the terminal:
    ```sh
    rosbridge_address
    ```
-4. Replace the field **rosbridge_address** on the app.js file:
+5. Replace the field **rosbridge_address** on the app.js file:
    ```sh
    rosbridge_address: 'wss://i-00cbdc40fcccd3514.robotigniteacademy.com/7e4d6577-22bd-40b2-b93e-1dab1f84d000/rosbridge/',
    ```
-5. Connect to the website:
+6. Connect to the website:
    ```sh
    https://i-072786a1118392265.robotigniteacademy.com/5aa33093-8141-45ca-9477-52ba0c8be6e5/webpage/
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<!-- REAL ROBOT -->
-## Real Robot
-Change to ordered pointcloud
-https://dev.intelrealsense.com/docs/ros2-wrapper
-```sh
-ros2 param set /D415/D415 align_depth.enable True
-ros2 param set /D415/D415 enable_sync True
-ros2 param set /D415/D415 pointcloud.ordered_pc True
-```
 
 
 <!-- NOTES -->
