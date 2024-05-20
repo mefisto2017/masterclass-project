@@ -261,7 +261,7 @@ private:
 
 
     // Plan and move
-    move_group_arm.setPlanningTime(40.0);
+    move_group_arm.setPlanningTime(20.0);
     moveit::planning_interface::MoveGroupInterface::Plan plan;
     move_group_arm.plan(plan);
     move_group_arm.execute(plan);
