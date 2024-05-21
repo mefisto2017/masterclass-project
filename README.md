@@ -140,19 +140,23 @@ on a delivery robot platform.
    cd ~/ros2_ws && \
    rm -rf /src/gazebo_ros_pkgs
    colcon build && \
-   source ~/ros2_ws/install/setup.bash && \
-   ros2 param set /D415/D415 align_depth.enable True
+   source ~/ros2_ws/install/setup.bash
    ```
-3. Moveit:
+3. Check hardware is working properly:
+   ```sh
+   ros2 param set /D415/D415 align_depth.enable True && \
+   ros2 control list_controllers
+   ```
+4. Moveit:
    ```sh
    ros2 launch real_my_moveit_config move_group.launch.py 
    ```
-4. Barista robot detector:
+5. Barista robot detector:
    ```sh
    source ~/ros2_ws/install/setup.bash && \
    ros2 launch hole_detector hole_detector_real.launch.py
    ```
-5. Pick and Place:
+6. Pick and Place:
    ```sh
    source ~/ros2_ws/install/setup.bash && \
    ros2 launch pick_and_place pick_and_place_perception_real.launch.py
