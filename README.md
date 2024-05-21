@@ -130,17 +130,12 @@ on a delivery robot platform.
 <!-- REAL ROBOT -->
 ## The construct
 ### Usage Real Robot
-1. Change simulation time to false:
-   ```sh
-   {"use_sim_time": False}
-   vim ~/ros2_ws/src/my_moveit_config/launch/move_group.launch.py
-   ```
-2. Install packages:
+1. Install packages:
    ```sh
    sudo apt update && \
    sudo apt install -y ros-humble-async-web-server-cpp
    ```
-3. Compile:
+2. Compile:
    ```sh
    cd ~/ros2_ws && \
    rm -rf /src/gazebo_ros_pkgs
@@ -148,16 +143,16 @@ on a delivery robot platform.
    source ~/ros2_ws/install/setup.bash && \
    ros2 param set /D415/D415 align_depth.enable True
    ```
-4. Moveit:
+3. Moveit:
    ```sh
-   ros2 launch my_moveit_config move_group.launch.py 
+   ros2 launch real_my_moveit_config move_group.launch.py 
    ```
-5. Barista robot detector:
+4. Barista robot detector:
    ```sh
    source ~/ros2_ws/install/setup.bash && \
    ros2 launch hole_detector hole_detector_real.launch.py
    ```
-6. Pick and Place:
+5. Pick and Place:
    ```sh
    source ~/ros2_ws/install/setup.bash && \
    ros2 launch pick_and_place pick_and_place_perception_real.launch.py
