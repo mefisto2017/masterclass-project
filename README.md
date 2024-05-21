@@ -137,7 +137,7 @@ on a delivery robot platform.
    ```
 2. Install packages:
    ```sh
-   sudo apt update
+   sudo apt update && \
    sudo apt install -y ros-humble-async-web-server-cpp
    ```
 3. Compile:
