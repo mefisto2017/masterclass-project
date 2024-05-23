@@ -8,3 +8,18 @@ moveit_setup_assistant_config:
     author_name: pablo
     author_email: pablo@fakemail.com
     generated_timestamp: 1713843072
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

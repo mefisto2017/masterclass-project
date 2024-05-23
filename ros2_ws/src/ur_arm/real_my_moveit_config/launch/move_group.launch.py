@@ -8,10 +8,10 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    # moveit_config = MoveItConfigsBuilder("name", package_name="my_moveit_config").to_moveit_configs()
+    # moveit_config = MoveItConfigsBuilder("name", package_name="real_my_moveit_config").to_moveit_configs()
 
     moveit_config = (
-        MoveItConfigsBuilder("name", package_name="my_moveit_config")
+        MoveItConfigsBuilder("name", package_name="real_my_moveit_config")
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
         .moveit_cpp(file_path="config/moveit_cpp.yaml")
         .to_moveit_configs()
