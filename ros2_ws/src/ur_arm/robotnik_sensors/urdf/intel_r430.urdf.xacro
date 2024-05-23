@@ -139,7 +139,7 @@
           <!--<horizontal_fov>${91.2*M_PI/340.0}</horizontal_fov>-->
           <horizontal_fov>${91.2*M_PI/260.0}</horizontal_fov>
           <image>
-            <format>R8G8B8</format>
+            <format>B8G8R8</format>
             <width>640</width>
             <height>480</height>
           </image>
@@ -159,6 +159,10 @@
           <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
           <!--<frameName>${prefix}_camera_depth_optical_frame</frameName>-->
           <frame_name>${prefix}_camera_depth_optical_frame</frame_name>
+          <!--FIX FOR DEPTH CAMERA BEING BLACK-->
+          <!-- https://www.youtube.com/watch?v=T9xZ22i9-Ys&ab_channel=ArticulatedRobotics -->
+          <min_depth>0.1</min_depth>
+          <max_depth>20</max_depth>
           <baseline>0.1</baseline>
           <distortion_k1>0.0</distortion_k1>
           <distortion_k2>0.0</distortion_k2>
