@@ -138,7 +138,7 @@ on a delivery robot platform.
 2. Compile:
    ```sh
    cd ~/ros2_ws && \
-   rm -rf /src/gazebo_ros_pkgs
+   rm -rf /src/gazebo_ros_pkgs && \
    colcon build && \
    source ~/ros2_ws/install/setup.bash
    ```
