@@ -146,6 +146,8 @@ on a delivery robot platform.
    ```sh
    ros2 param set /D415/D415 enable_color True && \
    ros2 param set /D415/D415 enable_depth True && \
+   ros2 param set /D415/D415 rgb_camera.profile 640x480x6 && \
+   ros2 param set /D415/D415 depth_module.profile 640x480x6 && \
    ros2 param set /D415/D415 align_depth.enable True && \
    ros2 control list_controllers
    ```
