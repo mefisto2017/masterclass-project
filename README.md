@@ -144,12 +144,15 @@ on a delivery robot platform.
    ```
 3. Check hardware is working properly:
    ```sh
+   ros2 param set /D415/D415 enable_color True && \
+   ros2 param set /D415/D415 enable_depth True && \
    ros2 param set /D415/D415 align_depth.enable True && \
    ros2 control list_controllers
    ```
 4. Moveit:
    ```sh
-   ros2 launch real_my_moveit_config move_group.launch.py 
+   ros2 launch real_my_moveit_config move_group.launch.py
+   ros2 launch real_my_moveit_config moveit_rviz.launch.py
    ```
 5. Barista robot detector:
    ```sh
