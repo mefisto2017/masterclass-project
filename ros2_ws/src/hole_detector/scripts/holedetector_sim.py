@@ -16,17 +16,13 @@ import asyncio
 import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from sensor_msgs.msg import PointCloud2
-from sensor_msgs.msg import CameraInfo
+from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import Point
 from hole_detector.srv import HoleCoordinates 
 
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-
-import ros2_numpy as rnp
 
 # transformation.py was not included in tf2
 # https://answers.ros.org/question/368446/how-do-i-use-tf2_ros-to-convert-from-quaternions-to-euler/
@@ -43,13 +39,12 @@ class HoleDetector(Node):
 
         # Service callback
         self.srv_ = self.create_service(HoleCoordinates, 'holes_coordinates', self.holes_coordinates_callback)
-
-        # Camera pointcloud topic subscriber
-        self.pc_subscriber_ = self.create_subscription(PointCloud2, '/wrist_rgbd_depth_sensor/points', self.point_callback, 10)
-
+        # Camera info topic subscriber
+        self.camera_info_subscriber_ = self.create_subscription(CameraInfo, '/wrist_rgbd_depth_sensor/depth/camera_info', self.camera_info_callback, 10)
         # Camera image subscriber
         self.image_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/image_raw', self.image_callback, 10)
-
+        # Camera depth aligned subscriber
+        self.image_depth_aligned_subscriber_ = self.create_subscription(Image, '/wrist_rgbd_depth_sensor/depth/image_raw', self.image_depth_aligned_callback, 10)
         # Image publisher just for visualization
         self.image_publisher_ = self.create_publisher(Image, '/detected_holes_image', 10)
 
@@ -63,9 +58,10 @@ class HoleDetector(Node):
         self.target_frame_ = "base_link"
 
         # Parameter Initialization
+        self.cv_depth_ = np.array([], dtype=np.float32)
         self.homogeneous_matrix_ = np.array([], dtype=np.float32)
-        self.xyz_ = []
         self.holes_coordinates_ = []
+        self.intrinsic_flag_ = False
 
         # Load extrinsic matrix 
         while not self.tf_calculation():
@@ -82,9 +78,9 @@ class HoleDetector(Node):
             for pt in self.holes_coordinates_:
                 # Fill the message
                 point = Point()
-                point.x = -0.317 #float(pt[0])
-                point.y = -0.015 #float(pt[1])
-                point.z = -0.239 #float(pt[2])
+                point.x = float(pt[0])
+                point.y = float(pt[1])
+                point.z = float(pt[2])
                 response.coordinates.append(point)
         else:
             response.success = False
@@ -92,17 +88,23 @@ class HoleDetector(Node):
         return response
 
 
-    def point_callback(self, msg):
+    def camera_info_callback(self, msg):
         """
-            Extract the x,y,z coordinates as seen as
-            the camera
+            Get intrinsic parameter from the camera
+                Intrinsic camera matrix for the raw (distorted) images.
+                    [fx  0 cx]
+                K = [ 0 fy cy]
+                    [ 0  0  1]
         """
-
-        # Reshape data into a 2D array
-        cloud_array = rnp.point_cloud2.pointcloud2_to_array(msg)
-        # print(cloud_array.dtype.names) # ('x', 'y', 'z', 'rgb')
-        # Extract x, y, z coordinates
-        self.xyz_ = rnp.point_cloud2.get_xyz_points(cloud_array, remove_nans=False)
+        camera_parameter = np.array(msg.k, dtype=np.float32)
+        camera_parameter = camera_parameter.reshape((3, 3))
+        self.fx_ = camera_parameter[0, 0]
+        self.fy_ = camera_parameter[1, 1]
+        self.cx_ = camera_parameter[0, 2]
+        self.cy_ = camera_parameter[1, 2]
+        self.destroy_subscription(self.camera_info_subscriber_) # After getting the parameters no need to call again
+        self.get_logger().info("Intrisic parameters captured")
+        self.intrinsic_flag_ = True
 
 
     def image_callback(self, msg):
@@ -117,15 +119,22 @@ class HoleDetector(Node):
             self.get_logger().warning("Camera extrinsic parameters not loaded yet")
             return
 
-        self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        # Check if the intrisic parameter were already loaded
+        if not self.intrinsic_flag_:
+            self.get_logger().warning("Camera intrisic parameters not loaded yet")
+            return
+
+        self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        # Save image for cv analisis
+        # cv2.imwrite('saved_image.png', self.cv_image_)
 
         # Change to gray scale 
         gray = cv2.cvtColor(self.cv_image_, cv2.COLOR_BGR2GRAY)
 
         # Simulation: 104
         # Real rgb: 120
-        # Aligned: -
-        ret, thresh1 = cv2.threshold(gray, 104, 255, cv2.THRESH_BINARY)
+        # Saved: 112
+        ret, thresh1 = cv2.threshold(gray, 112, 255, cv2.THRESH_BINARY_INV)
 
         # Blur using 3 * 3 kernel. 
         blurred = cv2.blur(thresh1, (3, 3)) 
@@ -138,12 +147,38 @@ class HoleDetector(Node):
                                             param1 = 300, 
                                             param2 = 0.8, 
                                             minRadius = 20, 
-                                            maxRadius = 50) 
+                                            maxRadius = 50)
+
+        detected_base = cv2.HoughCircles(blurred,  
+                                         cv2.HOUGH_GRADIENT_ALT, 
+                                         1.5, 
+                                         10, 
+                                         param1 = 300, 
+                                         param2 = 0.8, 
+                                         minRadius = 100, 
+                                         maxRadius = 200)  
 
         # Thread safe for holes_coordinates variable
         with self.mutex_:
+            # Process base first
+            success_base_flag = False
+            if detected_base is not None:
+                # Convert the circle parameters a, b and r to integers. 
+                detected_base = np.uint16(np.around(detected_base))
+                for pt in detected_base[0, :]: 
+                    a_b, b_b, r_b = pt[0], pt[1], pt[2]                     
+
+                    # Save the coordinates
+                    coor_base = self.get_world_coord([a_b, b_b])
+                    if len(coor_base) < 3:
+                        success_base_flag = False
+                    else:
+                        # Draw the circumference of the base. 
+                        cv2.circle(self.cv_image_, (a_b, b_b), r_b, (255, 0, 0), 2)
+                        success_base_flag = True
+
             # Draw circles if detected. 
-            if detected_circles is not None: 
+            if detected_circles is not None and success_base_flag: 
                 # Clear the array
                 self.holes_coordinates_.clear()
               
@@ -152,25 +187,31 @@ class HoleDetector(Node):
               
                 for pt in detected_circles[0, :]: 
                     a, b, r = pt[0], pt[1], pt[2]                     
-                    # Draw the circumference of the circle. 
-                    cv2.circle(self.cv_image_, (a, b), r, (0, 255, 0), 2)               
-                    # Draw a small circle (of radius 1) to show the center. 
-                    cv2.circle(self.cv_image_, (a, b), 1, (0, 0, 255), 3)
 
                     # Save the coordinates
                     coor = self.get_world_coord([a, b])
                     if len(coor) < 3:
                         continue
 
-                    self.holes_coordinates_.append(coor)
+                    # Draw the circumference of the circle. 
+                    cv2.circle(self.cv_image_, (a, b), r, (0, 255, 0), 2)               
+                    # Draw a small circle (of radius 1) to show the center. 
+                    cv2.circle(self.cv_image_, (a, b), 1, (0, 0, 255), 3)
+
+                    # Use the Z component of the base since this is constant
+                    # meanwhile the one of the hole will change due to the
+                    # camera angle
+                    const_z_coor = np.array([coor[0], coor[1], coor_base[2]])
+
+                    self.holes_coordinates_.append(const_z_coor)
                     # Write the coordinates on the image
                     font = cv2.FONT_HERSHEY_SIMPLEX 
                     fontScale = 0.3
                     color = (0, 255, 0)
                     thickness = 1
-                    x_string = "x:" + str(float(coor[0])*10)[:3]
-                    y_string = "y:" + str(float(coor[1])*10)[:3]
-                    z_string = "z:" + str(float(coor[2])*10)[:3]
+                    x_string = "x:" + str(float(const_z_coor[0])*10)[:3]
+                    y_string = "y:" + str(float(const_z_coor[1])*10)[:3]
+                    z_string = "z:" + str(float(const_z_coor[2])*10)[:3]
                     cv2.putText(self.cv_image_, x_string, (a + 25, b - 11), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, y_string, (a + 25, b), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, z_string, (a + 25, b + 11), font, fontScale, color, thickness, cv2.LINE_AA)
@@ -179,8 +220,12 @@ class HoleDetector(Node):
                self.holes_coordinates_ = []
             
         # Create and publish the image with the holes drown
-        ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="passthrough")
+        ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="bgr8")
         self.image_publisher_.publish(ros_image)
+
+
+    def image_depth_aligned_callback(self, msg):
+        self.cv_depth_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="passthrough")
 
 
     def tf_calculation(self):
@@ -235,11 +280,17 @@ class HoleDetector(Node):
             Transform the camera coordinates
             into the world coordinates
         """
-        dim = np.shape(self.xyz_)
-        
+        # Check array dimensions
+        dim = np.shape(self.cv_depth_)
         if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
-        xyz = np.array(np.append(self.xyz_[image_coor[0]][image_coor[1]], 1))
+        # Get camera coordinates
+        z = self.cv_depth_[image_coor[0]][image_coor[1]]
+        x = z * ((image_coor[0] - self.cx_) / self.fx_)
+        y = z * ((image_coor[1] - self.cy_) / self.fy_)
+        # Log the values of x, y and z
+        #self.get_logger().info(f'Computed x: {x} mm, y: {y} mm, z: {z} mm')
+        xyz = np.append(np.array([x, y, z]), 1)
         xyz = np.reshape(xyz, (4,1))
         # Transform the camera coordinates into world coordinates
         world_coordinates = self.homogeneous_matrix_@xyz

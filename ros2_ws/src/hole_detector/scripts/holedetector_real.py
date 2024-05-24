@@ -149,10 +149,36 @@ class HoleDetector(Node):
                                             minRadius = 10, 
                                             maxRadius = 15) 
 
+        detected_base = cv2.HoughCircles(blurred,  
+                                         cv2.HOUGH_GRADIENT_ALT, 
+                                         1.5, 
+                                         10, 
+                                         param1 = 300, 
+                                         param2 = 0.8, 
+                                         minRadius = 100, 
+                                         maxRadius = 200)  
+
         # Thread safe for holes_coordinates variable
         with self.mutex_:
+            # Process base first
+            success_base_flag = False
+            if detected_base is not None:
+                # Convert the circle parameters a, b and r to integers. 
+                detected_base = np.uint16(np.around(detected_base))
+                for pt in detected_base[0, :]: 
+                    a_b, b_b, r_b = pt[0], pt[1], pt[2]                     
+
+                    # Save the coordinates
+                    coor_base = self.get_world_coord([a_b, b_b])
+                    if len(coor_base) < 3:
+                        success_base_flag = False
+                    else:
+                        # Draw the circumference of the base. 
+                        cv2.circle(self.cv_image_, (a_b, b_b), r_b, (255, 0, 0), 2)
+                        success_base_flag = True
+
             # Draw circles if detected. 
-            if detected_circles is not None: 
+            if detected_circles is not None and success_base_flag: 
                 # Clear the array
                 self.holes_coordinates_.clear()
               
@@ -172,15 +198,20 @@ class HoleDetector(Node):
                     # Draw a small circle (of radius 1) to show the center. 
                     cv2.circle(self.cv_image_, (a, b), 1, (0, 0, 255), 3)
 
-                    self.holes_coordinates_.append(coor)
+                    # Use the Z component of the base since this is constant
+                    # meanwhile the one of the hole will change due to the
+                    # camera angle
+                    const_z_coor = np.array([coor[0], coor[1], coor_base[2]])
+
+                    self.holes_coordinates_.append(const_z_coor)
                     # Write the coordinates on the image
                     font = cv2.FONT_HERSHEY_SIMPLEX 
                     fontScale = 0.3
                     color = (0, 255, 0)
                     thickness = 1
-                    x_string = "x:" + str(float(coor[0])*10)[:3]
-                    y_string = "y:" + str(float(coor[1])*10)[:3]
-                    z_string = "z:" + str(float(coor[2])*10)[:3]
+                    x_string = "x:" + str(float(const_z_coor[0])*10)[:3]
+                    y_string = "y:" + str(float(const_z_coor[1])*10)[:3]
+                    z_string = "z:" + str(float(const_z_coor[2])*10)[:3]
                     cv2.putText(self.cv_image_, x_string, (a + 25, b - 11), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, y_string, (a + 25, b), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, z_string, (a + 25, b + 11), font, fontScale, color, thickness, cv2.LINE_AA)
