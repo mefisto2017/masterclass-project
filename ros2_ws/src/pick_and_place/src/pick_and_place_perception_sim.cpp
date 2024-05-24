@@ -99,6 +99,9 @@ private:
     const moveit::core::JointModelGroup *joint_model_group_arm =  move_group_arm.getCurrentState()->getJointModelGroup(PLANNING_GROUP_ARM);
     const moveit::core::JointModelGroup *joint_model_group_gripper =  move_group_gripper.getCurrentState()->getJointModelGroup(PLANNING_GROUP_GRIPPER);
 
+    // Planning scene to attach objects
+    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+
     // Get Current State
     moveit::core::RobotStatePtr current_state_arm = move_group_arm.getCurrentState(10);
     moveit::core::RobotStatePtr current_state_gripper = move_group_gripper.getCurrentState(10);
@@ -177,6 +180,36 @@ private:
     move_group_gripper.setNamedTarget("gripper_close");
     move_group_gripper.move();
 
+    // Attach
+    shape_msgs::msg::SolidPrimitive primitive;
+    moveit_msgs::msg::CollisionObject object_to_attach;
+    object_to_attach.id = "cylinder1";
+
+    shape_msgs::msg::SolidPrimitive cylinder_primitive;
+    cylinder_primitive.type = primitive.CYLINDER;
+    cylinder_primitive.dimensions.resize(2);
+    cylinder_primitive.dimensions[primitive.CYLINDER_HEIGHT] = 0.2;
+    cylinder_primitive.dimensions[primitive.CYLINDER_RADIUS] = 0.055;
+
+    object_to_attach.header.frame_id = move_group_arm.getEndEffectorLink();
+    geometry_msgs::msg::Pose grab_pose;
+    grab_pose.orientation.w = 1.0;
+    grab_pose.position.z = 0.25;
+
+    object_to_attach.primitives.push_back(cylinder_primitive);
+    object_to_attach.primitive_poses.push_back(grab_pose);
+    object_to_attach.operation = object_to_attach.ADD;
+    planning_scene_interface.applyCollisionObject(object_to_attach);
+
+    RCLCPP_INFO(LOGGER, "Attach the object to the robot");
+    std::vector<std::string> touch_links;
+    touch_links.push_back("rg2_gripper_left_thumb");
+    touch_links.push_back("rg2_gripper_right_thumb");
+    touch_links.push_back("rg2_gripper_left_finger");
+    touch_links.push_back("rg2_gripper_right_finger");
+    move_group_arm.attachObject(object_to_attach.id, "tool0", touch_links);
+
+
     // Retreat
     RCLCPP_INFO(LOGGER, "Retreat from object!");
     std::vector<geometry_msgs::msg::Pose> retreat_waypoints;
@@ -231,6 +264,10 @@ private:
     // Set constraints
     move_group_arm.setPathConstraints(orientation_constraints);
 
+    //moveit::core::RobotState start_state(*move_group_arm.getCurrentState());
+    //start_state.setFromIK(joint_model_group_arm, target_pose2);
+    //move_group_arm.setStartState(start_state);
+
     // Plan contraint
     /*moveit_msgs::msg::PositionConstraint plane_constraint;
     plane_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
@@ -261,7 +298,7 @@ private:
 
 
     // Plan and move
-    move_group_arm.setPlanningTime(20.0);
+    move_group_arm.setPlanningTime(15.0);
     moveit::planning_interface::MoveGroupInterface::Plan plan;
     move_group_arm.plan(plan);
     move_group_arm.execute(plan);
@@ -270,6 +307,14 @@ private:
     RCLCPP_INFO(LOGGER, "Release Object!");
     move_group_gripper.setNamedTarget("gripper_open");
     move_group_gripper.move();
+
+    // Dettach
+    RCLCPP_INFO(LOGGER, "Detach the object from the robot");
+    move_group_arm.detachObject(object_to_attach.id);
+    // Delete
+    std::vector<std::string> object_ids;
+    object_ids.push_back(object_to_attach.id);
+    planning_scene_interface.removeCollisionObjects(object_ids);
 
     // Go Home
     // https://moveit.picknik.ai/main/api/html/classmoveit_1_1planning__interface_1_1MoveGroupInterface_1_1MoveGroupInterfaceImpl.html#a80bf5d4f466b9d8edbc197a7e8e2a691
