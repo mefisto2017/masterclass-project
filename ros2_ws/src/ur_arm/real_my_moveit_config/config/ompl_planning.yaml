@@ -141,9 +141,9 @@ planner_configs:
 
 ur_manipulator:
   default_planner_config: RRTkConfigDefault # INCREASE RANGE IN THE PLANNER!!!!!!!!!!!!!
-  longest_valid_segment_fraction: 0.005
+  longest_valid_segment_fraction: 0.1
   enforce_constrained_state_space: true
-  projection_evaluator: joints(shoulder_pan_joint)
+  projection_evaluator: joints(shoulder_pan_joint, shoulder_lift_joint) # 1 JOINT IS NOT ENOUGH!!!!!!!!!!!!!
   planner_configs:
     - APSConfigDefault
     - SBLkConfigDefault

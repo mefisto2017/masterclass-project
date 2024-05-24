@@ -214,11 +214,7 @@ private:
     target_pose2.orientation = current_pose.pose.orientation;
     target_pose2.position.x = x_pos;
     target_pose2.position.y = y_pos;
-    target_pose2.position.z = z_pos;
-    //PERFECT PLACE GOT BY HAND
-    target_pose2.position.x = -0.317;
-    target_pose2.position.y = -0.015;
-    target_pose2.position.z = -0.239;
+    target_pose2.position.z = z_pos + 0.3;
     
     // Define orientation constraint
     // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
@@ -237,41 +233,24 @@ private:
     orientation_constraints.orientation_constraints.emplace_back(orientation_constraint);
     // Set constraints
     move_group_arm.setPathConstraints(orientation_constraints);
-
-    // Plan contraint
-    /*moveit_msgs::msg::PositionConstraint plane_constraint;
-    plane_constraint.header.frame_id = move_group_arm.getPoseReferenceFrame();
-    plane_constraint.link_name = move_group_arm.getEndEffectorLink();
-    shape_msgs::msg::SolidPrimitive plane;
-    plane.type = shape_msgs::msg::SolidPrimitive::BOX;
-    plane.dimensions = { 1.0, 1.0, 0.2};
-    plane_constraint.constraint_region.primitives.emplace_back(plane);
-
-    geometry_msgs::msg::Pose plane_pose;
-    auto current_pose = move_group_arm.getCurrentPose();
-    plane_pose.position.x = current_pose.pose.position.x;
-    plane_pose.position.y = current_pose.pose.position.y;
-    plane_pose.position.z = current_pose.pose.position.z;
-    plane_pose.orientation.x = 0.0;
-    plane_pose.orientation.y = 0.0;
-    plane_pose.orientation.z = 0.0;
-    plane_pose.orientation.w = 1.0;
-    plane_constraint.constraint_region.primitive_poses.emplace_back(plane_pose);
-    plane_constraint.weight = 1.0;
-
-    moveit_msgs::msg::Constraints plane_constraints;
-    plane_constraints.position_constraints.emplace_back(plane_constraint);
-    plane_constraints.name = "use_equality_constraints";
-    move_group_arm.setPathConstraints(plane_constraints);*/
-
     move_group_arm.setPoseTarget(target_pose2);
 
 
     // Plan and move
-    move_group_arm.setPlanningTime(20.0);
+    move_group_arm.setPlanningTime(10.0);
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    move_group_arm.plan(plan);
-    move_group_arm.execute(plan);
+    // Fix wn, pq aveces dice q encontro una solucion pero en verdad no
+    bool plan_success = false;
+    while (!plan_success)
+    {
+      rclcpp::Time t1 = this->now();
+      move_group_arm.plan(plan);
+      rclcpp::Time t2 = this->now();
+      if (t2.seconds()-t1.seconds() < 10.0)
+      {
+        plan_success = true;
+      }
+    }
     
     // Open Gripper
     RCLCPP_INFO(LOGGER, "Release Object!");
