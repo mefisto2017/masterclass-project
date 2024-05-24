@@ -44,6 +44,7 @@ planner_configs:
     type: geometric::RRT
     range: 1.5  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
     goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
+    termination_condition: CostConvergence[10,.1]
   RRTConnectkConfigDefault:
     type: geometric::RRTConnect
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
@@ -141,7 +142,7 @@ planner_configs:
 
 ur_manipulator:
   default_planner_config: RRTkConfigDefault # INCREASE RANGE IN THE PLANNER!!!!!!!!!!!!!
-  longest_valid_segment_fraction: 0.005
+  longest_valid_segment_fraction: 0.1
   enforce_constrained_state_space: true
   projection_evaluator: joints(shoulder_pan_joint)
   planner_configs:

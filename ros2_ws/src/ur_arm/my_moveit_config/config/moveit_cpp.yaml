@@ -1,4 +1,0 @@
-plan_request_params:
-  planning_attempts: 10
-  planning_pipeline: ompl
-  planner_id: "AnytimePathShortening"
