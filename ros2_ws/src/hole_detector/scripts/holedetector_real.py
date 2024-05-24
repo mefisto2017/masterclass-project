@@ -155,8 +155,8 @@ class HoleDetector(Node):
                                          10, 
                                          param1 = 300, 
                                          param2 = 0.8, 
-                                         minRadius = 100, 
-                                         maxRadius = 200)  
+                                         minRadius = 50, 
+                                         maxRadius = 100)  
 
         # Thread safe for holes_coordinates variable
         with self.mutex_:
@@ -216,8 +216,8 @@ class HoleDetector(Node):
                     cv2.putText(self.cv_image_, y_string, (a + 25, b), font, fontScale, color, thickness, cv2.LINE_AA)
                     cv2.putText(self.cv_image_, z_string, (a + 25, b + 11), font, fontScale, color, thickness, cv2.LINE_AA)
                     
-            else:
-               self.holes_coordinates_ = []
+            #else:
+               #self.holes_coordinates_ = []
             
         # Create and publish the image with the holes drown
         ros_image = self.bridge_.cv2_to_imgmsg(self.cv_image_, encoding="bgr8")
@@ -285,7 +285,9 @@ class HoleDetector(Node):
         if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
         # Get camera coordinates
-        z = self.cv_depth_[image_coor[0]][image_coor[1]]
+        # REP-118 
+        # depth images encoded as 16-bit unsigned integer, where each pixel is depth in millimeters
+        z = self.cv_depth_[image_coor[0]][image_coor[1]] / 1000.0
         x = z * ((image_coor[0] - self.cx_) / self.fx_)
         y = z * ((image_coor[1] - self.cy_) / self.fy_)
         # Log the values of x, y and z
