@@ -298,9 +298,13 @@ private:
 
 
     // Plan and move
-    move_group_arm.setPlanningTime(15.0);
+    move_group_arm.setPlanningTime(100.0);
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    move_group_arm.plan(plan);
+    bool plan_success = move_group_arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS;
+    while (!plan_success)
+    {
+      plan_success = move_group_arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS;
+    }
     move_group_arm.execute(plan);
     
     // Open Gripper
