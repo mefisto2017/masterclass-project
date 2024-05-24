@@ -240,11 +240,11 @@ private:
     target_pose2.orientation = current_pose.pose.orientation;
     target_pose2.position.x = x_pos;
     target_pose2.position.y = y_pos;
-    target_pose2.position.z = z_pos;
+    target_pose2.position.z = z_pos + 0.331284;
     //PERFECT PLACE GOT BY HAND
-    target_pose2.position.x = -0.317;
-    target_pose2.position.y = -0.015;
-    target_pose2.position.z = -0.239;
+    //target_pose2.position.x = -0.317;
+    //target_pose2.position.y = -0.015;
+    //target_pose2.position.z = -0.239;
     
     // Define orientation constraint
     // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
@@ -298,12 +298,19 @@ private:
 
 
     // Plan and move
-    move_group_arm.setPlanningTime(100.0);
+    move_group_arm.setPlanningTime(10.0);
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool plan_success = move_group_arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS;
+    // Fix wn, pq aveces dice q encontro una solucion pero en verdad no
+    bool plan_success = false;
     while (!plan_success)
     {
-      plan_success = move_group_arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS;
+      rclcpp::Time t1 = this->now();
+      move_group_arm.plan(plan);
+      rclcpp::Time t2 = this->now();
+      if (t2.seconds()-t1.seconds() < 10.0)
+      {
+        plan_success = true;
+      }
     }
     move_group_arm.execute(plan);
     
