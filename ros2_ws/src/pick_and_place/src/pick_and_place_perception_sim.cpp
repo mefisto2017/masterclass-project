@@ -64,14 +64,14 @@ private:
     if (!response->success) RCLCPP_ERROR(LOGGER, "Failed to get hole coordinates. Exiting.");
 
     RCLCPP_INFO(LOGGER, "Result received");
-    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[1].x,
-                                               response->coordinates[1].y,
-                                               response->coordinates[1].z);
+    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[2].x,
+                                               response->coordinates[2].y,
+                                               response->coordinates[2].z);
 
 
-    float x_pos = response->coordinates[1].x;
-    float y_pos = response->coordinates[1].y;
-    float z_pos = response->coordinates[1].z;
+    float x_pos = response->coordinates[2].x;
+    float y_pos = response->coordinates[2].y;
+    float z_pos = response->coordinates[2].z;
 
     /* Coordinates returned by the camera
        X: 0.327950 , Y: -0.012054
@@ -326,6 +326,12 @@ private:
     std::vector<std::string> object_ids;
     object_ids.push_back(object_to_attach.id);
     planning_scene_interface.removeCollisionObjects(object_ids);
+
+    // Hover
+    // Hovering again easier to calculate path to home
+    RCLCPP_INFO(LOGGER, "Hovering");
+    move_group_arm.setNamedTarget("hover");
+    move_group_arm.move();
 
     // Go Home
     // https://moveit.picknik.ai/main/api/html/classmoveit_1_1planning__interface_1_1MoveGroupInterface_1_1MoveGroupInterfaceImpl.html#a80bf5d4f466b9d8edbc197a7e8e2a691
