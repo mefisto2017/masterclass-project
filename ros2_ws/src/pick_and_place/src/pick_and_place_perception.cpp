@@ -257,6 +257,12 @@ private:
     move_group_gripper.setNamedTarget("gripper_open");
     move_group_gripper.move();
 
+    // Hover
+    // Hovering again easier to calculate path to home
+    RCLCPP_INFO(LOGGER, "Hovering");
+    move_group_arm.setNamedTarget("hover");
+    move_group_arm.move();
+
     // Go Home
     // https://moveit.picknik.ai/main/api/html/classmoveit_1_1planning__interface_1_1MoveGroupInterface_1_1MoveGroupInterfaceImpl.html#a80bf5d4f466b9d8edbc197a7e8e2a691
     move_group_arm.clearPathConstraints();
