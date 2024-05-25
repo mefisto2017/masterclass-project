@@ -285,7 +285,7 @@ class HoleDetector(Node):
         if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
         # Get camera coordinates
-        z = self.cv_depth_[image_coor[0]][image_coor[1]]
+        z = self.cv_depth_[image_coor[1]][image_coor[0]]
         x = z * ((image_coor[0] - self.cx_) / self.fx_)
         y = z * ((image_coor[1] - self.cy_) / self.fy_)
         # Log the values of x, y and z
