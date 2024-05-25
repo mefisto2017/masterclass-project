@@ -165,13 +165,8 @@ class HoleDetector(Node):
             if detected_base is not None:
                 # Convert the circle parameters a, b and r to integers. 
                 detected_base = np.uint16(np.around(detected_base))
-<<<<<<< Updated upstream
-                for pt in detected_base[0, :]: 
-                    a_b, b_b, r_b = pt[0], pt[1], pt[2]                     
-=======
                 for ptb in detected_base[0, :]: 
                     a_b, b_b, r_b = ptb[0], ptb[1], ptb[2]                     
->>>>>>> Stashed changes
 
                     # Save the coordinates
                     coor_base = self.get_world_coord([a_b, b_b])
@@ -207,10 +202,7 @@ class HoleDetector(Node):
                     # meanwhile the one of the hole will change due to the
                     # camera angle
                     const_z_coor = np.array([coor[0], coor[1], coor_base[2]])
-<<<<<<< Updated upstream
-=======
                     # self.get_logger().info(f'Computed x: {const_z_coor[0]} m, y: {const_z_coor[1]} m, z: {const_z_coor[2]} m')
->>>>>>> Stashed changes
 
                     self.holes_coordinates_.append(const_z_coor)
                     # Write the coordinates on the image
@@ -307,11 +299,6 @@ class HoleDetector(Node):
         if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
         # Get camera coordinates
-<<<<<<< Updated upstream
-        # REP-118 
-        # depth images encoded as 16-bit unsigned integer, where each pixel is depth in millimeters
-        z = self.cv_depth_[image_coor[0]][image_coor[1]] / 1000.0
-=======
         """
         In the context of image processing with OpenCV and many other image libraries, the convention 
         for accessing pixel values is to use the row and column indices. This means the coordinates are 
@@ -325,7 +312,6 @@ class HoleDetector(Node):
         if z == 0:
             self.get_logger().error(f'Invalid depth')
             return []
->>>>>>> Stashed changes
         x = z * ((image_coor[0] - self.cx_) / self.fx_)
         y = z * ((image_coor[1] - self.cy_) / self.fy_)
         # Log the values of x, y and z
