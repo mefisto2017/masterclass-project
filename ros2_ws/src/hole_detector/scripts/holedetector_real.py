@@ -40,7 +40,7 @@ class HoleDetector(Node):
         # Service callback
         self.srv_ = self.create_service(HoleCoordinates, 'holes_coordinates', self.holes_coordinates_callback)
         # Camera info topic subscriber
-        self.camera_info_subscriber_ = self.create_subscription(CameraInfo, '/D415/aligned_depth_to_color/camera_info', self.camera_info_callback, 10)
+        self.camera_info_subscriber_ = self.create_subscription(CameraInfo, '/D415/depth/camera_info', self.camera_info_callback, 10)
         # Camera image subscriber
         self.image_subscriber_ = self.create_subscription(Image, '/D415/color/image_raw', self.image_callback, 10)
         # Camera depth aligned subscriber
@@ -54,11 +54,11 @@ class HoleDetector(Node):
         self.mutex_ = threading.Lock()
 
         # Frames to transform
-        self.source_frame_ = "D415_depth_optical_frame" # real camera
+        self.source_frame_ = "D415_color_optical_frame" # real camera
         self.target_frame_ = "base_link"
 
         # Parameter Initialization
-        self.cv_depth_ = np.array([], dtype=np.float32)
+        self.cv_depth_ = np.array([], dtype=np.float16)
         self.homogeneous_matrix_ = np.array([], dtype=np.float32)
         self.holes_coordinates_ = []
         self.intrinsic_flag_ = False
@@ -126,7 +126,7 @@ class HoleDetector(Node):
 
         self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         # Save image for cv analisis
-        # cv2.imwrite('saved_image.png', self.cv_image_)
+        cv2.imwrite('saved_image.png', self.cv_image_)
 
         # Change to gray scale 
         gray = cv2.cvtColor(self.cv_image_, cv2.COLOR_BGR2GRAY)
@@ -165,8 +165,13 @@ class HoleDetector(Node):
             if detected_base is not None:
                 # Convert the circle parameters a, b and r to integers. 
                 detected_base = np.uint16(np.around(detected_base))
+<<<<<<< Updated upstream
                 for pt in detected_base[0, :]: 
                     a_b, b_b, r_b = pt[0], pt[1], pt[2]                     
+=======
+                for ptb in detected_base[0, :]: 
+                    a_b, b_b, r_b = ptb[0], ptb[1], ptb[2]                     
+>>>>>>> Stashed changes
 
                     # Save the coordinates
                     coor_base = self.get_world_coord([a_b, b_b])
@@ -186,7 +191,7 @@ class HoleDetector(Node):
                 detected_circles = np.uint16(np.around(detected_circles)) 
               
                 for pt in detected_circles[0, :]: 
-                    a, b, r = pt[0], pt[1], pt[2]                     
+                    a, b, r = pt[0], pt[1], pt[2]                
 
                     # Save the coordinates
                     coor = self.get_world_coord([a, b])
@@ -202,6 +207,10 @@ class HoleDetector(Node):
                     # meanwhile the one of the hole will change due to the
                     # camera angle
                     const_z_coor = np.array([coor[0], coor[1], coor_base[2]])
+<<<<<<< Updated upstream
+=======
+                    # self.get_logger().info(f'Computed x: {const_z_coor[0]} m, y: {const_z_coor[1]} m, z: {const_z_coor[2]} m')
+>>>>>>> Stashed changes
 
                     self.holes_coordinates_.append(const_z_coor)
                     # Write the coordinates on the image
@@ -225,7 +234,16 @@ class HoleDetector(Node):
 
 
     def image_depth_aligned_callback(self, msg):
-        self.cv_depth_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        self.cv_depth_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="16UC1")
+        """
+        Just for saving image and compare if aligned
+        """
+        # Normalize the depth image to the range 0-255 for visualization
+        #depth_normalized = cv2.normalize(self.cv_depth_, None, 0, 255, cv2.NORM_MINMAX)
+        # Convert to 8-bit image
+        #depth_8bit = np.uint8(depth_normalized)
+        # Save the image to a file
+        #cv2.imwrite('depth_saved_image.png', depth_8bit)
 
 
     def tf_calculation(self):
@@ -280,18 +298,38 @@ class HoleDetector(Node):
             Transform the camera coordinates
             into the world coordinates
         """
+        # Check if depth image hasnt been rceived
+        if self.cv_depth_ is None:
+            self.get_logger().error(f'Aligned depth image not received')
+            return []
         # Check array dimensions
         dim = np.shape(self.cv_depth_)
         if image_coor[0] >= dim[0] or image_coor[1] >= dim[1]:
             return []
         # Get camera coordinates
+<<<<<<< Updated upstream
         # REP-118 
         # depth images encoded as 16-bit unsigned integer, where each pixel is depth in millimeters
         z = self.cv_depth_[image_coor[0]][image_coor[1]] / 1000.0
+=======
+        """
+        In the context of image processing with OpenCV and many other image libraries, the convention 
+        for accessing pixel values is to use the row and column indices. This means the coordinates are 
+        typically specified as (row, column), which corresponds to (y, x) in the Cartesian coordinate system
+        """
+        z = self.cv_depth_[image_coor[1]][image_coor[0]]
+        # REP-118 
+        # depth images encoded as 16-bit unsigned integer, where each pixel is depth in millimeters
+        z = z / 1000.0
+        # Check for invalid depth values
+        if z == 0:
+            self.get_logger().error(f'Invalid depth')
+            return []
+>>>>>>> Stashed changes
         x = z * ((image_coor[0] - self.cx_) / self.fx_)
         y = z * ((image_coor[1] - self.cy_) / self.fy_)
         # Log the values of x, y and z
-        #self.get_logger().info(f'Computed x: {x} mm, y: {y} mm, z: {z} mm')
+        # self.get_logger().info(f'Computed x: {x} mm, y: {y} mm, z: {z} mm')
         xyz = np.append(np.array([x, y, z]), 1)
         xyz = np.reshape(xyz, (4,1))
         # Transform the camera coordinates into world coordinates
