@@ -126,7 +126,7 @@ class HoleDetector(Node):
 
         self.cv_image_ = self.bridge_.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         # Save image for cv analisis
-        cv2.imwrite('saved_image.png', self.cv_image_)
+        # cv2.imwrite('saved_image.png', self.cv_image_)
 
         # Change to gray scale 
         gray = cv2.cvtColor(self.cv_image_, cv2.COLOR_BGR2GRAY)
