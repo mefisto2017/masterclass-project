@@ -166,6 +166,10 @@ on a delivery robot platform.
    source ~/ros2_ws/install/setup.bash && \
    ros2 launch pick_and_place pick_and_place_perception_real.launch.py
    ```
+7. Test without website:
+   ```sh
+   ros2 topic pub /webpage std_msgs/msg/Int16 data:\ 1
+   ```
 
 ### Webpage
 1. Start the web application:
