@@ -208,3 +208,10 @@ on a delivery robot platform.
 * https://roboticsbackend.com/ros2-package-for-both-python-and-cpp-nodes/
 * https://ros2-tutorial.readthedocs.io/en/latest/using_python_library.html
 * https://moveit.picknik.ai/humble/doc/examples/move_group_interface/move_group_interface_tutorial.html
+
+
+<!-- KEYS -->
+## Key topics learnt
+* Moveit - plannning with orientation constraint.
+* Moveit - Attach object to the arm for planning.
+* Perception - Use RGB and Depth aligned image to get object coordinates.
