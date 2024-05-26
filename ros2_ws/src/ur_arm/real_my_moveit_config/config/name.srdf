@@ -40,7 +40,7 @@
     </group_state>
 
     <group_state name="preplace" group="ur_manipulator">
-        <joint name="shoulder_pan_joint" value="2.53"/>
+        <joint name="shoulder_pan_joint" value="3.1"/>
         <joint name="shoulder_lift_joint" value="-0.9599"/>
         <joint name="elbow_joint" value="0.279"/>
         <joint name="wrist_1_joint" value="-0.925"/>

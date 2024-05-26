@@ -12,7 +12,7 @@ from moveit_configs_utils import MoveItConfigsBuilder
 
 def generate_launch_description():
     # Initialize Arguments
-    moveit_package = get_package_share_directory("my_moveit_config")
+    moveit_package = get_package_share_directory("real_my_moveit_config")
     ur_package = get_package_share_directory("ur_description")
 
     # Find paths
@@ -21,7 +21,7 @@ def generate_launch_description():
     controller_file_path = PathJoinSubstitution([moveit_package, "config", "moveit_controllers.yaml"])
     urdf_file_path = PathJoinSubstitution([ur_package, "urdf", "ur.urdf.xacro"]) 
 
-    moveit_config = MoveItConfigsBuilder("name", package_name="my_moveit_config").to_moveit_configs()
+    moveit_config = MoveItConfigsBuilder("name", package_name="real_my_moveit_config").to_moveit_configs()
 
     ppp_node = Node(
         name="pick_and_place_perception",
