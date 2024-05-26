@@ -258,6 +258,9 @@ private:
     move_group_gripper.setNamedTarget("gripper_open");
     move_group_gripper.move();
 
+    // https://moveit.picknik.ai/main/api/html/classmoveit_1_1planning__interface_1_1MoveGroupInterface_1_1MoveGroupInterfaceImpl.html#a80bf5d4f466b9d8edbc197a7e8e2a691
+    move_group_arm.clearPathConstraints();
+
     // Hover
     // Hovering again easier to calculate path to home
     RCLCPP_INFO(LOGGER, "Hovering");
@@ -265,8 +268,6 @@ private:
     move_group_arm.move();
 
     // Go Home
-    // https://moveit.picknik.ai/main/api/html/classmoveit_1_1planning__interface_1_1MoveGroupInterface_1_1MoveGroupInterfaceImpl.html#a80bf5d4f466b9d8edbc197a7e8e2a691
-    move_group_arm.clearPathConstraints();
     RCLCPP_INFO(LOGGER, "Going Home");
     move_group_arm.setNamedTarget("home");
     move_group_arm.move();
