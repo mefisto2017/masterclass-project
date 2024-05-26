@@ -71,14 +71,14 @@ private:
     if (!response->success) RCLCPP_ERROR(LOGGER, "Failed to get hole coordinates. Exiting.");
 
     RCLCPP_INFO(LOGGER, "Result received");
-    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[1].x,
-                                               response->coordinates[1].y,
-                                               response->coordinates[1].z);
+    RCLCPP_INFO(LOGGER, "X: %f, Y: %f, Z: %f", response->coordinates[0].x,
+                                               response->coordinates[0].y,
+                                               response->coordinates[0].z);
 
 
-    float x_pos = response->coordinates[1].x;
-    float y_pos = response->coordinates[1].y;
-    float z_pos = response->coordinates[1].z;
+    float x_pos = response->coordinates[0].x;
+    float y_pos = response->coordinates[0].y;
+    float z_pos = response->coordinates[0].z;
 
     /* Coordinates returned by the camera
        X: 0.327950 , Y: -0.012054
@@ -251,6 +251,7 @@ private:
         plan_success = true;
       }
     }
+    move_group_arm.execute(plan);
     
     // Open Gripper
     RCLCPP_INFO(LOGGER, "Release Object!");
