@@ -40,7 +40,7 @@ class HoleDetector(Node):
         # Service callback
         self.srv_ = self.create_service(HoleCoordinates, 'holes_coordinates', self.holes_coordinates_callback)
         # Camera info topic subscriber
-        self.camera_info_subscriber_ = self.create_subscription(CameraInfo, '/D415/depth/camera_info', self.camera_info_callback, 10)
+        self.camera_info_subscriber_ = self.create_subscription(CameraInfo, '/D415/color/camera_info', self.camera_info_callback, 10)
         # Camera image subscriber
         self.image_subscriber_ = self.create_subscription(Image, '/D415/color/image_raw', self.image_callback, 10)
         # Camera depth aligned subscriber
