@@ -207,5 +207,4 @@ on a delivery robot platform.
 * gazebo-ros-pkgs cloned from **ros2** branch fixes the unordered pointcloud obtained in the simulation.
 * https://roboticsbackend.com/ros2-package-for-both-python-and-cpp-nodes/
 * https://ros2-tutorial.readthedocs.io/en/latest/using_python_library.html
-
-https://moveit.picknik.ai/humble/doc/examples/move_group_interface/move_group_interface_tutorial.html
+* https://moveit.picknik.ai/humble/doc/examples/move_group_interface/move_group_interface_tutorial.html
