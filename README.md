@@ -1,4 +1,4 @@
-# MasterClass Project
+![image](https://github.com/mefisto2017/materclass-project/assets/26053694/818ea86c-d5e9-4d11-b794-c68d2a0982a4)# MasterClass Project
 
 <a name="readme-top"></a>
 
@@ -146,8 +146,8 @@ on a delivery robot platform.
    ```sh
    ros2 param set /D415/D415 enable_color True && \
    ros2 param set /D415/D415 enable_depth True && \
-   ros2 param set /D415/D415 rgb_camera.profile 640x480x6 && \
-   ros2 param set /D415/D415 depth_module.profile 640x480x6 && \
+   ros2 param set /D415/D415 rgb_camera.profile 480x270x6 && \
+   ros2 param set /D415/D415 depth_module.profile 480x270x6 && \
    ros2 param set /D415/D415 align_depth.enable True && \
    ros2 control list_controllers
    ```
