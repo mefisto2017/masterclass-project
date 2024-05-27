@@ -158,10 +158,10 @@ private:
     target_pose1.orientation.z = 0.007;
     target_pose1.orientation.w = -0.016;
 
-    target_pose1.position.z -= 0.04;
+    target_pose1.position.z -= 0.05;
     approach_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z -= 0.04;
+    target_pose1.position.z -= 0.05;
     approach_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_approach;
@@ -187,10 +187,10 @@ private:
     // Retreat
     RCLCPP_INFO(LOGGER, "Retreat from object!");
     std::vector<geometry_msgs::msg::Pose> retreat_waypoints;
-    target_pose1.position.z += 0.04;
+    target_pose1.position.z += 0.05;
     retreat_waypoints.push_back(target_pose1);
 
-    target_pose1.position.z += 0.04;
+    target_pose1.position.z += 0.05;
     retreat_waypoints.push_back(target_pose1);
 
     moveit_msgs::msg::RobotTrajectory trajectory_retreat;
