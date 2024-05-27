@@ -214,7 +214,7 @@ private:
     target_pose2.orientation = current_pose.pose.orientation;
     target_pose2.position.x = x_pos;
     target_pose2.position.y = y_pos;
-    target_pose2.position.z = z_pos + 0.3;
+    target_pose2.position.z = z_pos + 0.35;
     
     // Define orientation constraint
     // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
