@@ -1,4 +1,4 @@
-![image](https://github.com/mefisto2017/materclass-project/assets/26053694/818ea86c-d5e9-4d11-b794-c68d2a0982a4)# MasterClass Project
+# MasterClass Project
 
 <a name="readme-top"></a>
 
