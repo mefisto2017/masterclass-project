@@ -75,7 +75,9 @@ class HoleDetector(Node):
         # Check if the coordinate list is empty
         if self.holes_coordinates_:
             response.success = True
-            for pt in self.holes_coordinates_:
+            # Sort array self.holes_coordinates_ pt[0]
+            sorted_holes = sorted(self.holes_coordinates_, key=lambda pt: pt[0], reverse=True)
+            for pt in sorted_holes:
                 # Fill the message
                 point = Point()
                 point.x = float(pt[0])
