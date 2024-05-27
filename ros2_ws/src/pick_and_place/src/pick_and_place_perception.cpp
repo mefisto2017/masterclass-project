@@ -75,22 +75,8 @@ private:
                                                response->coordinates[0].y,
                                                response->coordinates[0].z);
 
-
-    float x_pos = response->coordinates[0].x;
-    float y_pos = response->coordinates[0].y;
-    float z_pos = response->coordinates[0].z;
-
-    /* Coordinates returned by the camera
-       X: 0.327950 , Y: -0.012054
-       My coordinates
-       x = 0.335 , y = -0.016; // replace them  in line 
-           target_pose1.position.x = 0.335;
-           target_pose1.position.y = -0.016;
-
-       then new coordinates:
-       x_pos += 0.335 - 0.327950
-       y_pos += -0.016 + 0.012054
-    */
+    int len = sizeof(response->coordinates) / sizeof(response->coordinates[0]);
+    float z_pos = response->coordinates[0].z + 0.35;
     
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(move_group_node_);
@@ -212,9 +198,9 @@ private:
     auto current_pose = move_group_arm.getCurrentPose();
     geometry_msgs::msg::Pose target_pose2;
     target_pose2.orientation = current_pose.pose.orientation;
-    target_pose2.position.x = x_pos;
-    target_pose2.position.y = y_pos;
-    target_pose2.position.z = z_pos + 0.35;
+    target_pose2.position.x = response->coordinates[0].x;
+    target_pose2.position.y = response->coordinates[0].y;
+    target_pose2.position.z = z_pos;
     
     // Define orientation constraint
     // https://moveit.picknik.ai/main/doc/how_to_guides/using_ompl_constrained_planning/ompl_constrained_planning.html
@@ -241,11 +227,26 @@ private:
     moveit::planning_interface::MoveGroupInterface::Plan plan;
     // Fix wn, pq aveces dice q encontro una solucion pero en verdad no
     bool plan_success = false;
+    int i = 1;
     while (!plan_success)
     {
+      RCLCPP_INFO(LOGGER, "PLANNING FOR X: %f, Y: %f, Z: %f", target_pose2.position.x,
+                                                              target_pose2.position.y,
+                                                              target_pose2.position.z);
       rclcpp::Time t1 = this->now();
-      move_group_arm.plan(plan);
+      bool success = (move_group_arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
       rclcpp::Time t2 = this->now();
+      // Check if the hole is in range
+      if (!success)
+      {
+        // If not in range move to the next point
+        target_pose2.position.x = response->coordinates[i].x;
+        target_pose2.position.y = response->coordinates[i].y;
+        move_group_arm.setPoseTarget(target_pose2);
+        i++;
+        if (i >= len) i = 0;
+      }
+      // Only if time was less 10 seconds a real solution was found
       if (t2.seconds()-t1.seconds() < 10.0)
       {
         plan_success = true;
