@@ -199,7 +199,7 @@ private:
     geometry_msgs::msg::Pose target_pose2;
     target_pose2.orientation = current_pose.pose.orientation;
     target_pose2.position.x = response->coordinates[0].x;
-    target_pose2.position.y = response->coordinates[0].y;
+    target_pose2.position.y = response->coordinates[0].y - 0.02;
     target_pose2.position.z = z_pos;
     
     // Define orientation constraint
@@ -241,7 +241,7 @@ private:
       {
         // If not in range move to the next point
         target_pose2.position.x = response->coordinates[i].x;
-        target_pose2.position.y = response->coordinates[i].y;
+        target_pose2.position.y = response->coordinates[i].y - 0.02;
         move_group_arm.setPoseTarget(target_pose2);
         i++;
         if (i >= len) i = 0;
