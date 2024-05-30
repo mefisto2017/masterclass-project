@@ -46,7 +46,7 @@ on a delivery robot platform.
 1. Clone the repo:
    ```sh
    cd ~ && \
-   git clone https://github.com/mefisto2017/masterclass-project
+   git clone https://github.com/pvela2017/The-Construct-Starbots-Coffee-Shop
    ```
 2. Compile the image:
    ```sh
