@@ -51,13 +51,9 @@ on a delivery robot platform.
 2. Compile the image:
    ```sh
    cd masterclass-project/docker && \
-   docker build .
+   docker build -t mefistocl/masterclassproject:latest .
    ```
-3. Tag the image:
-   ```sh
-   docker image tag XXXXX mefistocl/masterclassproject:latest
-   ```
-4. Setup the docker compose file:
+3. Setup the docker compose file:
    ```yaml
    environment:
       - DISPLAY=:0 # Select the dispaly to be shared, can be replaced by $DISPLAY
